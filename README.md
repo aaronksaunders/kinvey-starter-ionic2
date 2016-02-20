@@ -1,0 +1,1 @@
+# kinvey-starter-ionic2
