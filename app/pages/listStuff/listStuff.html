@@ -1,0 +1,29 @@
+
+<ion-navbar *navbar>
+  <ion-buttons start (click)="doShowModal()">
+    <button>
+      ADD
+    </button>
+  </ion-buttons>
+  <ion-title>
+    To Do List Page
+  </ion-title>
+  <ion-buttons end (click)="doLogout()">
+    <button>
+      LOGOUT
+    </button>
+  </ion-buttons>
+</ion-navbar>
+
+<ion-content class="listStuff">
+  <ion-list>
+  <ion-card *ngFor="#item of itemList; #i = index">
+    <ion-card-header>
+      (&nbsp;{{i}}&nbsp;)&nbsp;{{item.title}}
+    </ion-card-header>
+    <ion-card-content>
+      {{item.description}}
+    </ion-card-content>
+  </ion-card>
+  </ion-list>
+</ion-content>

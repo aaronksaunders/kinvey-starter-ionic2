@@ -1,0 +1,30 @@
+<ion-navbar *navbar>
+  <ion-title>Create New To Do Item</ion-title>
+</ion-navbar>
+
+<ion-content padding class="addStruff">
+  <ion-list>
+
+    <ion-item >
+      <ion-label floating>title</ion-label>
+      <ion-input type="text" value="" [(ngModel)]="todo.title"></ion-input>
+    </ion-item>
+
+    <ion-item >
+      <ion-label floating>Description</ion-label>
+      <ion-input type="text" value="" [(ngModel)]="todo.description"></ion-input>
+    </ion-item>
+
+    <ion-item >
+      <ion-label floating>Status</ion-label>
+      <ion-input type="text" value="" [(ngModel)]="todo.status"></ion-input>
+    </ion-item>
+
+  </ion-list>
+  <button class="button button-block" (click)="saveToDo(todo)">
+    Save To Do
+  </button>
+  <button class="button button-block" (click)="cancel()">
+    Cancel
+  </button>
+</ion-content>

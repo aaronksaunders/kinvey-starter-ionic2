@@ -1,0 +1,30 @@
+
+<ion-navbar *navbar>
+  <ion-title>
+    Create New Account
+  </ion-title>
+</ion-navbar>
+
+<ion-content class="createAccount">
+  <ion-list>
+    <ion-item >
+      <ion-label floating>First Name</ion-label>
+      <ion-input type="text" value="" [(ngModel)]="creds.first_name"></ion-input>
+    </ion-item>
+    <ion-item >
+      <ion-label floating>Last Name</ion-label>
+      <ion-input type="text" value="" [(ngModel)]="creds.last_name"></ion-input>
+    </ion-item>
+    <ion-item >
+      <ion-label floating>Username</ion-label>
+      <ion-input type="text" value="" [(ngModel)]="creds.username"></ion-input>
+    </ion-item>
+    <ion-item >
+      <ion-label floating>Password</ion-label>
+      <ion-input type="password" value="" [(ngModel)]="creds.password"></ion-input>
+    </ion-item>
+  </ion-list>
+  <button class="button button-block" (click)="createAccountClicked($event)">
+    Create Account
+  </button>
+</ion-content>

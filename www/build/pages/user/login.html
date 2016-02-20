@@ -1,0 +1,25 @@
+<ion-navbar *navbar>
+  <ion-title>{{title}}</ion-title>
+</ion-navbar>
+
+<ion-content padding class="login">
+  <ion-list>
+
+    <ion-item >
+      <ion-label floating>Username</ion-label>
+      <ion-input type="text" value="" [(ngModel)]="username"></ion-input>
+    </ion-item>
+
+    <ion-item >
+      <ion-label floating>Password</ion-label>
+      <ion-input type="password" value="" [(ngModel)]="password"></ion-input>
+    </ion-item>
+
+  </ion-list>
+  <button class="button button-block" (click)="loginClicked($event)">
+    Login
+  </button>
+  <button class="button button-block" (click)="createAccountClicked($event)">
+    Create Account
+  </button>
+</ion-content>
