@@ -2,6 +2,10 @@
 
 #### Checkout the repo and run `npm install` to download the required node modules for the project
 
+### Create Account w/ Kinvey
+* We are using the REST API in this project not the angular module
+* See the REST API documentation here [REST API Getting Started](http://devcenter.kinvey.com/rest/guides/getting-started)
+
 ### Setup
 Edit the configuration file, [`app/services/config.ts`](https://github.com/aaronksaunders/kinvey-starter-ionic2/blob/master/app/services/config.ts) to contain the proper credentials from your kinvey account
 
