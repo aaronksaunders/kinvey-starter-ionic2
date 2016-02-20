@@ -1,7 +1,7 @@
 # kinvey-starter-ionic2
 
 ### Setup
-Edit the configuration file, `app/services/config.ts` to contain the proper credentials from your kinvey account
+Edit the configuration file, [`app/services/config.ts`](https://github.com/aaronksaunders/kinvey-starter-ionic2/blob/master/app/services/config.ts) to contain the proper credentials from your kinvey account
 
 ```Javascript
 export let KINVEY_BASE_URL = "https://baas.kinvey.com/";
