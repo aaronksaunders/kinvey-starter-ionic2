@@ -1,5 +1,7 @@
 # kinvey-starter-ionic2
 
+#### Checkout the repo and run `npm install` to download the required node modules for the project
+
 ### Setup
 Edit the configuration file, [`app/services/config.ts`](https://github.com/aaronksaunders/kinvey-starter-ionic2/blob/master/app/services/config.ts) to contain the proper credentials from your kinvey account
 
