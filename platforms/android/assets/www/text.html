@@ -1,0 +1,183 @@
+// authentication.ts
+import {Injectable} from 'angular2/core';
+import {Observable} from 'rxjs/Observable';
+import {Http, Headers, RequestOptions} from 'angular2/http';
+import 'rxjs/RX';
+
+import {KINVEY_BASE_URL, KINVEY_AUTH} from './config';
+
+@Injectable()
+export class ToDoService {
+  token: string;
+
+  constructor(public http: Http) {
+    this.token = localStorage.getItem('token');
+  }
+
+
+  _photo(_data, _imageData) {
+    let url = _data._uploadURL
+    var headers = new Headers(_data._requiredHeaders);
+    headers.append("Content-Type", "image/png")
+    headers.append("Content-Length", _imageData.length)
+    console.log(_imageData)
+    return this.http.put(url, _imageData, {
+      headers: headers
+    })
+      .subscribe(
+      data => {
+        console.log(data);
+      },
+      err => console.log('Error Getting Data:', err._body)
+      );
+  }
+
+  uploadPhoto(_imageData) {
+    var headers = new Headers();
+    headers.append('Content-Type', 'application/json');
+    headers.append('X-Kinvey-API-Version', '3')
+    headers.append('Authorization', 'Kinvey ' + this.token)
+    headers.append('X-Kinvey-Content-Type', "image/png")
+
+    var params = JSON.stringify({
+      "_filename": "myFilename.png",
+      "_public": true,
+      "size" : _imageData.length,
+      "mimeType" : "image/png"
+    })
+
+    this.http.post('https://baas.kinvey.com/blob/kid1781', params, {
+      headers: headers
+    }).map(res => res.json()) // convert json
+      .subscribe(
+      data => {
+        console.log(data);
+        return this._photo(data, _imageData)
+      },
+      err => console.log('Error Getting Data:', JSON.parse(err._body).description)
+      );
+  }
+
+  readThis(inputValue: any, _that) {
+    try {
+      var myReader: FileReader = new FileReader();
+
+      myReader.onloadend = function(evt) {
+        // you can perform an action with readed data here
+        var byteArray = new Uint8Array(evt.target.result);
+        var output = new Array( byteArray.length );
+        var i = 0;
+        var n = output.length;
+        while( i < n ) {
+            output[i] = byteArray[i];
+            i++;
+        }
+        _that.uploadPhoto(output, output.length)
+      }
+
+      myReader.onerror = function(e) {
+        console.log(e)
+      }
+
+      inputValue.file(function(s){
+        myReader.readAsArrayBuffer(s);
+      }, function(e) {
+            console.log('ee');
+      })
+    } catch (EE) {
+      console.log(EE)
+    }
+  }
+
+  _base64ToArrayBuffer(base64) {
+    var binary_string =  window.atob(base64);
+    var len = binary_string.length;
+    var bytes = new Uint8Array( len );
+    for (var i = 0; i < len; i++)        {
+        bytes[i] = binary_string.charCodeAt(i);
+    }
+    return bytes.buffer;
+}
+
+  b64toBlob(b64Data, contentType, sliceSize) {
+      contentType = contentType || '';
+      sliceSize = sliceSize || 512;
+
+      var byteCharacters = atob(b64Data);
+      var byteArrays = [];
+
+      for (var offset = 0; offset < byteCharacters.length; offset += sliceSize) {
+          var slice = byteCharacters.slice(offset, offset + sliceSize);
+
+          var byteNumbers = new Array(slice.length);
+          for (var i = 0; i < slice.length; i++) {
+              byteNumbers[i] = slice.charCodeAt(i);
+          }
+
+          var byteArray = new Uint8Array(byteNumbers);
+
+          byteArrays.push(byteArray);
+      }
+
+      var blob = new Blob(byteArrays, {type: contentType});
+      return blob;
+  }
+
+
+  addPhoto() {
+    let that = this
+
+    navigator.camera.getPicture(onSuccess, onFail, {
+      quality: 50,
+      destinationType: Camera.DestinationType.DATA_URL,
+      sourceType: Camera.PictureSourceType.PHOTOLIBRARY,
+      encodingTyp: Camera.EncodingType.PNG
+    });
+
+    function onSuccess(imageURI) {
+      let imageDataB64 = /*"data:image/png;base64,"+ */imageData;
+      //that.uploadPhoto(that._base64ToArrayBuffer(imageDataB64))
+      window.resolveLocalFileSystemURL(imageURI,
+        function(_file) {
+          that.readThis(_file, that)
+        },
+        function(_e) {
+          console.log(_e)
+        });
+
+    }
+
+    function onFail(message) {
+      alert('Failed because: ' + message);
+    }
+  }
+
+  addItem(_item) {
+    let url = KINVEY_BASE_URL + 'appdata/kid1781/todo-collection'
+    let params = JSON.stringify(_item)
+    return this.http.post(url, params, {
+      headers: new Headers({
+        'Content-Type': 'application/json',
+        'Authorization': 'Kinvey ' + this.token,
+        'X-Kinvey-API-Version': 3
+      })
+    })
+      .map((res: any) => {
+      let data = res.json();
+      return data
+    });
+  }
+  getAllItems() {
+    return this.http.get(KINVEY_BASE_URL + 'appdata/kid1781/todo-collection', {
+      headers: new Headers({
+        'Content-Type': 'application/json',
+        'Authorization': 'Kinvey ' + this.token,
+        'X-Kinvey-API-Version': 3
+      })
+    })
+      .map((res: any) => {
+      let data = res.json();
+      return data
+    });
+  }
+}
