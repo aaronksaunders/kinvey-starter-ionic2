@@ -26,11 +26,13 @@ Make sure in your kinvey console to create a collect named `todo-collection` and
 ```
 
 **The application demonstrates the following:**
-* Login
-* Create Account
+* Login and Logout
+* Create New User Account
 * View Data Collection
 * Delete Object From Data Collection - *swipe list item to expose delete button* (In Progress)
 * Add Object to Data Collection
+* Using Camera Plugin to capture image and then upload file
+* Add File Objects as A Collection
 
 ---
 [Ionic 1 Version of Starter Project Can Be Found Here](https://github.com/aaronksaunders/kinvey-starter-ionic)
