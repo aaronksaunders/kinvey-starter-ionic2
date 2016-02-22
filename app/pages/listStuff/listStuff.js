@@ -43,6 +43,8 @@ var ListStuffPage = (function () {
     };
     ListStuffPage.prototype.doLogout = function () {
         var _this = this;
+        this.tdService.addPhoto();
+        return;
         this.auth.logout().subscribe(function (data) {
             console.log('logging out', data);
             _this.nav.setRoot(login_1.LoginPage, {});

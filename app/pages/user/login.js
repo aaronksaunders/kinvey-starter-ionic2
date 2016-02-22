@@ -17,7 +17,13 @@ var LoginPage = (function () {
         this.auth = auth;
         this.username = null;
         this.password = null;
+        this.checkAuth();
     }
+    LoginPage.prototype.checkAuth = function () {
+        if (localStorage.getItem('token')) {
+            this.nav.setRoot(listStuff_1.ListStuffPage, {});
+        }
+    };
     LoginPage.prototype.loginClicked = function (event) {
         var _this = this;
         console.log('You selected', event);

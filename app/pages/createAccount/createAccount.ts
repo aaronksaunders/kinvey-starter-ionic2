@@ -2,13 +2,19 @@ import {Page, NavController} from 'ionic-framework/ionic';
 import {Authentication} from '../../services/authentication';
 import {ListStuffPage} from '../listStuff/listStuff';
 
+import {HTTP_PROVIDERS, Http, Headers } from 'angular2/http';
+
 @Page({
   templateUrl: 'build/pages/createAccount/createAccount.html',
 })
 export class CreateAccountPage {
   creds
   nav
-  constructor(nav: NavController, public auth: Authentication) {
+  token
+  constructor(nav: NavController, public auth: Authentication,public http: Http) {
+
+    this.token = localStorage.getItem('token');
+
     this.creds = {
       first_name:"",
       last_name:"",
@@ -30,6 +36,6 @@ export class CreateAccountPage {
       (err) => console.log("Error Creating Account In:", JSON.parse(err._body).description),
       () => { console.log("error") }
       );
-
   }
+
 }

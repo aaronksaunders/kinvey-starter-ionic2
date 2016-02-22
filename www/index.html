@@ -9,6 +9,8 @@
 
   <link ios-href="build/css/app.ios.css" rel="stylesheet">
   <link md-href="build/css/app.md.css" rel="stylesheet">
+  <meta http-equiv="Content-Security-Policy"
+  content="default-src 'self' https: http: data: gap: cdvfile: https://ssl.gstatic.com 'unsafe-eval'; script-src * 'self' 'unsafe-eval' 'unsafe-inline'  https: http: ; style-src 'self' 'unsafe-inline'; media-src *; connect-src 'self' file: http: https: ws:">
 </head>
 <body>
 
@@ -16,6 +18,7 @@
   <ion-app></ion-app>
 
   <script src="cordova.js"></script>
+  <script src="node_modules/whatwg-fetch/fetch.js"></script>
   <script src="build/js/app.bundle.js"></script>
 </body>
 </html>

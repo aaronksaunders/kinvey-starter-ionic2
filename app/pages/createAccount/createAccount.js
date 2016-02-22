@@ -10,9 +10,12 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var ionic_1 = require('ionic-framework/ionic');
 var authentication_1 = require('../../services/authentication');
 var listStuff_1 = require('../listStuff/listStuff');
+var http_1 = require('angular2/http');
 var CreateAccountPage = (function () {
-    function CreateAccountPage(nav, auth) {
+    function CreateAccountPage(nav, auth, http) {
         this.auth = auth;
+        this.http = http;
+        this.token = localStorage.getItem('token');
         this.creds = {
             first_name: "",
             last_name: "",
@@ -34,7 +37,7 @@ var CreateAccountPage = (function () {
         ionic_1.Page({
             templateUrl: 'build/pages/createAccount/createAccount.html',
         }), 
-        __metadata('design:paramtypes', [ionic_1.NavController, authentication_1.Authentication])
+        __metadata('design:paramtypes', [ionic_1.NavController, authentication_1.Authentication, http_1.Http])
     ], CreateAccountPage);
     return CreateAccountPage;
 })();

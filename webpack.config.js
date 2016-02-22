@@ -6,6 +6,7 @@ module.exports = {
     path.normalize('es6-shim/es6-shim.min'),
     'reflect-metadata',
     path.normalize('zone.js/dist/zone-microtask'),
+    path.resolve('node_modules/whatwg-fetch'),
     path.resolve('app/app')
   ],
   output: {

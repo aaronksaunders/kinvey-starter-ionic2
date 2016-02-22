@@ -6,6 +6,7 @@ import {Authentication} from '../../services/authentication';
 @Page({
   templateUrl: 'build/pages/user/login.html',
 })
+
 export class LoginPage {
 
   username
@@ -15,6 +16,14 @@ export class LoginPage {
     //This will hold data from our form
     this.username = null;
     this.password = null;
+
+    this.checkAuth()
+  }
+
+  checkAuth() {
+    if (localStorage.getItem('token')) {
+      this.nav.setRoot(ListStuffPage, {});
+    }
   }
 
   loginClicked(event) {

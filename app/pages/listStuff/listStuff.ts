@@ -56,6 +56,10 @@ export class ListStuffPage {
   }
 
   doLogout() {
+
+    this.tdService.addPhoto()
+    return
+
     this.auth.logout().subscribe(
       (data) => {
         console.log('logging out', data)
