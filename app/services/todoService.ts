@@ -187,6 +187,19 @@ export class ToDoService {
       return data
     });
   }
+  getAllImages() {
+    return this.http.get(KINVEY_BASE_URL + 'blob/kid1781', {
+      headers: new Headers({
+        'Content-Type': 'application/json',
+        'Authorization': 'Kinvey ' + this.token,
+        'X-Kinvey-API-Version': 3
+      })
+    })
+      .map((res: any) => {
+      let data = res.json();
+      return data
+    });
+  }
   getAllItems() {
     return this.http.get(KINVEY_BASE_URL + 'appdata/kid1781/todo-collection', {
       headers: new Headers({

@@ -144,6 +144,19 @@ var ToDoService = (function () {
             return data;
         });
     };
+    ToDoService.prototype.getAllImages = function () {
+        return this.http.get(config_1.KINVEY_BASE_URL + 'blob/kid1781', {
+            headers: new http_1.Headers({
+                'Content-Type': 'application/json',
+                'Authorization': 'Kinvey ' + this.token,
+                'X-Kinvey-API-Version': 3
+            })
+        })
+            .map(function (res) {
+            var data = res.json();
+            return data;
+        });
+    };
     ToDoService.prototype.getAllItems = function () {
         return this.http.get(config_1.KINVEY_BASE_URL + 'appdata/kid1781/todo-collection', {
             headers: new http_1.Headers({

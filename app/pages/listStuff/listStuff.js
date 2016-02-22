@@ -17,14 +17,23 @@ var ListStuffPage = (function () {
         this.auth = auth;
         this.tdService = tdService;
         this.nav = nav;
-        this.loadData();
+        this.visibleObject = "todos";
+        this.loadData("todos");
     }
-    ListStuffPage.prototype.loadData = function () {
+    ListStuffPage.prototype.loadData = function (_visibleObject) {
         var _this = this;
-        this.tdService.getAllItems().subscribe(function (data) {
-            console.log('getAllItems', data);
-            _this.itemList = data;
-        }, function (err) { return console.log("Error Retrieving Data:", JSON.parse(err._body).description); }, function () { console.log("All Good With The Data"); });
+        if (_visibleObject === "todos") {
+            this.tdService.getAllItems().subscribe(function (data) {
+                console.log('getAllItems', data);
+                _this.itemList = data;
+            }, function (err) { return console.log("Error Retrieving Data:", JSON.parse(err._body).description); }, function () { console.log("All Good With The Data"); });
+        }
+        if (_visibleObject === "images") {
+            this.tdService.getAllImages().subscribe(function (data) {
+                console.log('getAllImages', data);
+                _this.imageList = data;
+            }, function (err) { return console.log("Error Retrieving Data:", JSON.parse(err._body).description); }, function () { console.log("All Good With The Data"); });
+        }
     };
     ListStuffPage.prototype.doShowModal = function () {
         var _this = this;

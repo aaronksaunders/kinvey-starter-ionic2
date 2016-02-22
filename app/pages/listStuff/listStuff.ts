@@ -13,24 +13,40 @@ import {AddStuffModal} from '../../pages/listStuff/addStuffModal';
 export class ListStuffPage {
   nav
   itemList
+  visibleObject
+  imageList
 
   constructor(app: IonicApp, nav: NavController, navParams: NavParams,
     public auth: Authentication,
     public tdService: ToDoService) {
     this.nav = nav;
 
-    this.loadData()
+    this.visibleObject = "todos"
+    this.loadData("todos")
   }
 
-  loadData() {
-    this.tdService.getAllItems().subscribe(
-      (data) => {
-        console.log('getAllItems', data)
-        this.itemList = data
-      },
-      (err) => console.log("Error Retrieving Data:", JSON.parse(err._body).description),
-      () => { console.log("All Good With The Data") }
-      );
+  loadData(_visibleObject) {
+    if (_visibleObject === "todos") {
+      this.tdService.getAllItems().subscribe(
+        (data) => {
+          console.log('getAllItems', data)
+          this.itemList = data
+        },
+        (err) => console.log("Error Retrieving Data:", JSON.parse(err._body).description),
+        () => { console.log("All Good With The Data") }
+        );
+    }
+
+    if (_visibleObject === "images") {
+      this.tdService.getAllImages().subscribe(
+        (data) => {
+          console.log('getAllImages', data)
+          this.imageList = data
+        },
+        (err) => console.log("Error Retrieving Data:", JSON.parse(err._body).description),
+        () => { console.log("All Good With The Data") }
+        );
+    }
   }
 
   doShowModal() {
@@ -38,9 +54,9 @@ export class ListStuffPage {
     this.nav.present(myModal);
 
     // get data back
-    myModal.onDismiss( data => {
+    myModal.onDismiss(data => {
       console.log(data)
-      if ( data ) {
+      if (data) {
         // add item and refresh view
         this.tdService.addItem(data).subscribe(
           (data) => {
@@ -55,10 +71,12 @@ export class ListStuffPage {
     })
   }
 
-  doLogout() {
 
+  doShowCamera() {
     this.tdService.addPhoto()
-    return
+  }
+
+  doLogout() {
 
     this.auth.logout().subscribe(
       (data) => {
