@@ -16,7 +16,7 @@ var ToDoService = (function () {
         this.http = http;
         this.token = localStorage.getItem('token');
     }
-    ToDoService.prototype._photo = function (_data, _imageData, _size) {
+    ToDoService.prototype._uploadPhotoUsingGoogleURL = function (_data, _imageData, _size) {
         try {
             var url = _data._uploadURL;
             var headers = new window.Headers(_data._requiredHeaders);
@@ -38,7 +38,7 @@ var ToDoService = (function () {
             alert("Error in _photo:" + JSON.stringify(EE));
         }
     };
-    ToDoService.prototype.uploadPhoto = function (_imageData, _size) {
+    ToDoService.prototype._uploadPhotoToKinvey = function (_imageData, _size) {
         var that = this;
         try {
             var headers = new window.Headers();
@@ -60,42 +60,50 @@ var ToDoService = (function () {
                 return _result.json();
             }).then(function (_data) {
                 console.log("fetch: ", _data);
-                return that._photo(_data, _imageData, _size);
+                return that._uploadPhotoUsingGoogleURL(_data, _imageData, _size);
             }, function (_error) {
                 console.log("fetch error: ", _error);
+                return _error;
             });
         }
         catch (EE) {
             alert("Error in uploadPhoto:" + JSON.stringify(EE));
         }
     };
-    ToDoService.prototype.readThis = function (inputValue, _that) {
+    ToDoService.prototype._readImageFileFromCamera = function (_fileInfo, _that, _callback) {
         try {
-            var myReader = new FileReader();
-            myReader.onloadend = function (evt) {
+            var fileReader = new FileReader();
+            fileReader.onloadend = function (evt) {
                 var array = evt.target.result;
                 var len = array.byteLength;
-                _that.uploadPhoto(array, len);
+                _that._uploadPhotoToKinvey(array, len).then(function (_result) {
+                    _callback({
+                        success: true,
+                        result: _result
+                    });
+                }, function (_error) {
+                    throw _error;
+                });
             };
-            myReader.onload = function (evt) {
-                var array = evt.target.result;
-                var len = array.byteLength;
-                console.log("in onload from FileReader");
+            fileReader.onerror = function (_error) {
+                console.log(_error);
+                throw _error;
             };
-            myReader.onerror = function (e) {
-                console.log(e);
-            };
-            inputValue.file(function (s) {
-                myReader.readAsArrayBuffer(s);
-            }, function (e) {
-                console.log('ee', e);
+            _fileInfo.file(function (s) {
+                fileReader.readAsArrayBuffer(s);
+            }, function (_error) {
+                throw _error;
             });
         }
         catch (EE) {
             alert("Error in readThis:" + JSON.stringify(EE));
+            _callback({
+                success: false,
+                result: EE
+            });
         }
     };
-    ToDoService.prototype.addPhoto = function () {
+    ToDoService.prototype.addPhoto = function (_callback) {
         var that = this;
         navigator.camera.getPicture(onSuccess, onFail, {
             quality: 50,
@@ -105,13 +113,20 @@ var ToDoService = (function () {
         });
         function onSuccess(imageURI) {
             window.resolveLocalFileSystemURL(imageURI, function (_file) {
-                that.readThis(_file, that);
-            }, function (_e) {
-                console.log(_e);
+                that._readImageFileFromCamera(_file, that, _callback);
+            }, function (_error) {
+                _callback({
+                    success: false,
+                    result: _error
+                });
             });
         }
         function onFail(message) {
             alert('Failed because: ' + message);
+            _callback({
+                success: false,
+                result: message
+            });
         }
     };
     ToDoService.prototype.addItem = function (_item) {

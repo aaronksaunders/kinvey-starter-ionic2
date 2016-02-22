@@ -15,7 +15,19 @@ export class ToDoService {
   }
 
 
-  _photo(_data, _imageData, _size) {
+  /**
+  * using the informatiom from the previous call to
+  * uploadPhotoToKinvey, we have a URL to load the file
+  * to Google Cloud Storage
+  *
+  * @param _data {Object} response from the kinvey api call, contains information
+  *                       required to upload to google
+  * @param _imageData {ByteArray} the actual image data to be uploaded
+  * @param _size {Integer} the size of the upload
+  *
+  * @returns {Promise}
+  */
+  _uploadPhotoUsingGoogleURL(_data, _imageData, _size) {
     try {
       let url = _data._uploadURL
       var headers = new window.Headers(_data._requiredHeaders);
@@ -34,11 +46,20 @@ export class ToDoService {
       })
     } catch (EE) {
       console.log("Error in _photo:", EE)
-      alert("Error in _photo:"+JSON.stringify(EE))
+      alert("Error in _photo:" + JSON.stringify(EE))
     }
   }
 
-  uploadPhoto(_imageData, _size) {
+  /**
+  * upload the photo to kinvey and then get back a URL that is then used
+  * to upload the file to google cloud
+  *
+  * @param _imageData {ByteArray} the actual image data to be uploaded
+  * @param _size {Integer} the size of the upload
+  *
+  * @returns {Promise}
+  */
+  _uploadPhotoToKinvey(_imageData, _size) {
     var that = this;
     try {
       var headers = new window.Headers();
@@ -62,48 +83,64 @@ export class ToDoService {
         return _result.json()
       }).then(function(_data) {
         console.log("fetch: ", _data)
-        return that._photo(_data, _imageData, _size)
+        return that._uploadPhotoUsingGoogleURL(_data, _imageData, _size)
       }, function(_error) {
           console.log("fetch error: ", _error)
+          return _error
         })
     } catch (EE) {
-      alert("Error in uploadPhoto:"+JSON.stringify(EE))
+      alert("Error in uploadPhoto:" + JSON.stringify(EE))
     }
   }
 
-  readThis(inputValue, _that) {
+  /**
+  * read the file that we got from the camera plugin, convert the fileReader
+  * into a byteArray so that it can be uploaded
+  *
+  */
+  _readImageFileFromCamera(_fileInfo, _that, _callback) {
     try {
-      var myReader: FileReader = new FileReader();
+      var fileReader: FileReader = new FileReader();
 
-      myReader.onloadend = function(evt) {
+      fileReader.onloadend = function(evt) {
         var array = evt.target.result
         var len = array.byteLength
 
-        _that.uploadPhoto(array, len)
+        _that._uploadPhotoToKinvey(array, len).then(function(_result) {
+          _callback({
+            success: true,
+            result: _result
+          })
+        }, function(_error) {
+            throw _error
+          })
       }
 
-      myReader.onload = function(evt) {
-        var array = evt.target.result
-        var len = array.byteLength
-
-        console.log("in onload from FileReader")
+      fileReader.onerror = function(_error) {
+        console.log(_error)
+        throw _error
       }
 
-      myReader.onerror = function(e) {
-        console.log(e)
-      }
-
-      inputValue.file(function(s) {
-        myReader.readAsArrayBuffer(s);
-      }, function(e) {
-          console.log('ee', e);
+      _fileInfo.file(function(s) {
+        fileReader.readAsArrayBuffer(s);
+      }, function(_error) {
+          throw _error
         })
     } catch (EE) {
-      alert("Error in readThis:"+JSON.stringify(EE))
+      alert("Error in readThis:" + JSON.stringify(EE))
+      _callback({
+        success: false,
+        result: EE
+      })
     }
   }
 
-  addPhoto() {
+  /**
+  * try and add a photo to the database
+  *
+  * @param _callback {Function} called when the process is complete
+  */
+  addPhoto(_callback) {
     let that = this
 
     navigator.camera.getPicture(onSuccess, onFail, {
@@ -114,20 +151,24 @@ export class ToDoService {
     });
 
     function onSuccess(imageURI) {
-      //let imageDataB64 = /*"data:image/png;base64,"+ */imageData;
-      //that.uploadPhoto(that._base64ToArrayBuffer(imageDataB64))
       window.resolveLocalFileSystemURL(imageURI,
         function(_file) {
-          that.readThis(_file, that)
+          that._readImageFileFromCamera(_file, that, _callback)
         },
-        function(_e) {
-          console.log(_e)
+        function(_error) {
+          _callback({
+            success: false,
+            result: _error
+          })
         });
-
     }
 
     function onFail(message) {
       alert('Failed because: ' + message);
+      _callback({
+        success: false,
+        result: message
+      })
     }
   }
 
