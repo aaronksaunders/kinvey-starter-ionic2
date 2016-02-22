@@ -2,6 +2,10 @@
 
 #### Checkout the repo and run `npm install` to download the required node modules for the project
 
+#### Required Plugins
+* Camera
+* File
+
 ### Create Account w/ Kinvey
 * We are using the REST API in this project not the angular module
 * See the REST API documentation here [REST API Getting Started](http://devcenter.kinvey.com/rest/guides/getting-started)
