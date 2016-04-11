@@ -1,4 +1,5 @@
-import {App, Platform} from 'ionic-framework/ionic';
+import 'es6-shim';
+import {App, Platform} from 'ionic-angular';
 import {LoginPage} from './pages/user/login';
 import {CreateAccountPage} from './pages/createAccount/createAccount';
 import {ListStuffPage} from './pages/listStuff/listStuff';

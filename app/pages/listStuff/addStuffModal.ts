@@ -1,4 +1,4 @@
-import {Page, ViewController} from 'ionic-framework/ionic';
+import {Page, ViewController} from 'ionic-angular';
 
 @Page({
   templateUrl: 'build/pages/listStuff/addStuffModal.html'

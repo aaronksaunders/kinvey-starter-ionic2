@@ -25,10 +25,10 @@
         "ionic-plugin-keyboard": {
             "PACKAGE_NAME": "io.ionic.starter"
         },
-        "cordova-plugin-camera": {
+        "cordova-plugin-file": {
             "PACKAGE_NAME": "io.ionic.starter"
         },
-        "cordova-plugin-file": {
+        "cordova-plugin-camera": {
             "PACKAGE_NAME": "io.ionic.starter"
         }
     },

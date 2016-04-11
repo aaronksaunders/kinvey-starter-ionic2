@@ -1,8 +1,8 @@
 // authentication.ts
 import {Injectable} from 'angular2/core';
-import {Observable} from 'rxjs/Observable';
 import {Http, Headers, RequestOptions} from 'angular2/http';
 import 'rxjs/RX';
+import fetch from 'whatwg-fetch/fetch'
 
 import {KINVEY_BASE_URL, KINVEY_AUTH} from './config';
 

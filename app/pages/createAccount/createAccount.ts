@@ -1,4 +1,4 @@
-import {Page, NavController} from 'ionic-framework/ionic';
+import {Page, NavController} from 'ionic-angular';
 import {Authentication} from '../../services/authentication';
 import {ListStuffPage} from '../listStuff/listStuff';
 

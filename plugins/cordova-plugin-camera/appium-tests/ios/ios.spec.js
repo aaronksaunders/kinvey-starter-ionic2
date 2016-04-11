@@ -1,6 +1,30 @@
-/*jslint node: true, plusplus: true */
-/*global beforeEach, afterEach */
-/*global describe, it, xit, expect, jasmine, pending */
+/*jshint node: true, jasmine: true */
+/*
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one
+ * or more contributor license agreements.  See the NOTICE file
+ * distributed with this work for additional information
+ * regarding copyright ownership.  The ASF licenses this file
+ * to you under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance
+ * with the License.  You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ *
+*/
+
+// these tests are meant to be executed by Cordova Medic Appium runner
+// you can find it here: https://github.com/apache/cordova-medic/
+// it is not necessary to do a full CI setup to run these tests
+// just run "node cordova-medic/medic/medic.js appium --platform android --plugins cordova-plugin-camera"
+
 'use strict';
 
 var wdHelper = require('../helpers/wdHelper');
@@ -8,32 +32,40 @@ var wd = wdHelper.getWD();
 var isDevice = global.DEVICE;
 var cameraConstants = require('../../www/CameraConstants');
 var cameraHelper = require('../helpers/cameraHelper');
+var screenshotHelper = require('../helpers/screenshotHelper');
+
+var MINUTE = 60 * 1000;
+var DEFAULT_WEBVIEW_CONTEXT = 'WEBVIEW_1';
 
 describe('Camera tests iOS.', function () {
-    var driver,
-        webviewContext = 'WEBVIEW_1',
-        startingMessage = 'Ready for action!';
+
+    var driver;
+    var webviewContext = DEFAULT_WEBVIEW_CONTEXT;
+    var startingMessage = 'Ready for action!';
 
     function win() {
         expect(true).toBe(true);
     }
 
     function fail(error) {
+        screenshotHelper.saveScreenshot(driver);
         if (error && error.message) {
             console.log('An error occured: ' + error.message);
             expect(true).toFailWithMessage(error.message);
-            return;
+            throw error.message;
         }
         if (error) {
             console.log('Failed expectation: ' + error);
             expect(true).toFailWithMessage(error);
-            return;
+            throw error;
         }
         // no message provided :(
-        console.log('An error without description occured');
         expect(true).toBe(false);
+        throw 'An error without description occured';
     }
 
+    // generates test specs by combining all the specified options
+    // you can add more options to test more scenarios
     function generateSpecs() {
         var sourceTypes = [
                 cameraConstants.PictureSourceType.CAMERA,
@@ -198,7 +230,7 @@ describe('Camera tests iOS.', function () {
 
     it('camera.ui.util Configuring driver and starting a session', function (done) {
         driver = wdHelper.getDriver('iOS', done);
-    }, 240000);
+    }, 3 * MINUTE);
 
     describe('Specs.', function () {
         // getPicture() with mediaType: VIDEO, sourceType: PHOTOLIBRARY
@@ -213,7 +245,7 @@ describe('Camera tests iOS.', function () {
                 .elementByName('Cancel')
                 .click()
                 .finally(done);
-        }, 300000);
+        }, 3 * MINUTE);
 
         // getPicture(), then dismiss
         // wait for the error callback to bee called
@@ -235,7 +267,7 @@ describe('Camera tests iOS.', function () {
                     return checkPicture(false);
                 }, fail)
                 .finally(done);
-        }, 300000);
+        }, 3 * MINUTE);
 
         // combine various options for getPicture()
         generateSpecs().forEach(function (spec) {
@@ -245,7 +277,7 @@ describe('Camera tests iOS.', function () {
                     pending();
                 }
                 runCombinedSpec(spec).then(done);
-            }, 3 * 60 * 1000);
+            }, 3 * MINUTE);
         });
 
     });

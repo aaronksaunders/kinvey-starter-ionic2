@@ -1,4 +1,4 @@
-import {Page, NavController, NavParams, IonicApp, Modal} from 'ionic-framework/ionic';
+import {Page, NavController, NavParams, IonicApp, Modal} from 'ionic-angular';
 import {ToDoService} from '../../services/todoService';
 import {Authentication} from '../../services/authentication';
 import {LoginPage} from '../../pages/user/login';
