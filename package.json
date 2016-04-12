@@ -21,10 +21,11 @@
     "ionic-gulp-sass-build": "^1.0.0",
     "ionic-gulp-scripts-copy": "^1.0.0",
     "moment": "^2.12.0",
+    "whatwg-fetch": "^0.11.0",
     "run-sequence": "^1.1.5"
   },
-  "name": "kinveylogin2",
-  "description": "kinveyLogin2: An Ionic project",
+  "name": "KinveyStarter2",
+  "description": "KinveyStarter2: An Ionic project",
   "cordovaPlugins": [
     "cordova-plugin-device",
     "cordova-plugin-console",

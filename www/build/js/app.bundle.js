@@ -177,6 +177,7 @@ var ListStuffPage = (function () {
                 _this.imageList = data;
             }, function (err) { return console.log("Error Retrieving Data:", JSON.parse(err._body).description); }, function () { console.log("All Good With The Data"); });
         }
+        this.visibleObject = _visibleObject;
     };
     ListStuffPage.prototype.doShowModal = function () {
         var _this = this;
@@ -190,13 +191,15 @@ var ListStuffPage = (function () {
                 _this.tdService.addItem(data).subscribe(function (data) {
                     console.log('Item Added', data);
                     alert("New Item Added To List");
-                    _this.loadData();
+                    _this.loadData(_this.visibleObject);
                 }, function (err) { return console.log("Error Adding Item:", JSON.parse(err._body).description); }, function () { console.log("All Good With The Data"); });
             }
         });
     };
     ListStuffPage.prototype.doShowCamera = function () {
-        this.tdService.addPhoto();
+        this.tdService.addPhoto(function (result) {
+            console.log("doShowCamera", result);
+        });
     };
     ListStuffPage.prototype.doLogout = function () {
         var _this = this;
@@ -357,7 +360,7 @@ var Authentication = (function () {
 }());
 exports.Authentication = Authentication;
 
-},{"./config":7,"angular2/core":11,"angular2/http":12,"rxjs/RX":372}],7:[function(require,module,exports){
+},{"./config":7,"angular2/core":11,"angular2/http":12,"rxjs/RX":417}],7:[function(require,module,exports){
 "use strict";
 exports.KINVEY_BASE_URL = "https://baas.kinvey.com/";
 var appKey = "kid1781";
@@ -379,7 +382,8 @@ var __metadata = (this && this.__metadata) || function (k, v) {
 var core_1 = require('angular2/core');
 var http_1 = require('angular2/http');
 require('rxjs/RX');
-var fetch_1 = require('whatwg-fetch/fetch');
+require('whatwg-fetch');
+var ionic_native_1 = require('ionic-native');
 var config_1 = require('./config');
 var ToDoService = (function () {
     function ToDoService(http) {
@@ -401,13 +405,13 @@ var ToDoService = (function () {
     ToDoService.prototype._uploadPhotoUsingGoogleURL = function (_data, _imageData, _size) {
         try {
             var url = _data._uploadURL;
-            var headers = new window.Headers(_data._requiredHeaders);
+            var headers = new http_1.Headers(_data._requiredHeaders);
             headers.append("Content-Type", "image/png");
             headers.append("Content-Length", _size);
             console.log(_imageData);
-            return fetch_1.default(url, {
+            return fetch(url, {
                 method: "PUT",
-                headers: headers,
+                headers: headers.toJSON(),
                 body: _imageData
             }).then(function (_result) {
                 console.log("fetch: ", _result);
@@ -432,7 +436,7 @@ var ToDoService = (function () {
     ToDoService.prototype._uploadPhotoToKinvey = function (_imageData, _size) {
         var that = this;
         try {
-            var headers = new window.Headers();
+            var headers = new http_1.Headers();
             headers.append('Content-Type', 'application/json');
             headers.append('X-Kinvey-API-Version', '3');
             headers.append('Authorization', 'Kinvey ' + this.token);
@@ -443,9 +447,9 @@ var ToDoService = (function () {
                 "size": _size,
                 "mimeType": "image/png"
             });
-            return fetch_1.default('https://baas.kinvey.com/blob/kid1781', {
+            return fetch('https://baas.kinvey.com/blob/kid1781', {
                 method: "POST",
-                headers: headers,
+                headers: headers.toJSON(),
                 body: params
             }).then(function (_result) {
                 return _result.json();
@@ -506,14 +510,14 @@ var ToDoService = (function () {
     */
     ToDoService.prototype.addPhoto = function (_callback) {
         var that = this;
-        navigator.camera.getPicture(onSuccess, onFail, {
+        var options = {
             quality: 50,
-            destinationType: Camera.DestinationType.FILE_URI,
-            sourceType: Camera.PictureSourceType.PHOTOLIBRARY,
-            encodingTyp: Camera.EncodingType.PNG
-        });
-        function onSuccess(imageURI) {
-            window.resolveLocalFileSystemURL(imageURI, function (_file) {
+            destinationType: 1,
+            sourceType: 0,
+            encodingType: 1 // Camera.EncodingType.PNG        
+        };
+        ionic_native_1.Camera.getPicture(options).then(function (imageURI) {
+            resolveLocalFileSystemURL(imageURI, function (_file) {
                 that._readImageFileFromCamera(_file, that, _callback);
             }, function (_error) {
                 _callback({
@@ -521,14 +525,13 @@ var ToDoService = (function () {
                     result: _error
                 });
             });
-        }
-        function onFail(message) {
+        }).catch(function (message) {
             alert('Failed because: ' + message);
             _callback({
                 success: false,
                 result: message
             });
-        }
+        });
     };
     ToDoService.prototype.addItem = function (_item) {
         var url = config_1.KINVEY_BASE_URL + 'appdata/kid1781/todo-collection';
@@ -579,7 +582,7 @@ var ToDoService = (function () {
 }());
 exports.ToDoService = ToDoService;
 
-},{"./config":7,"angular2/core":11,"angular2/http":12,"rxjs/RX":372,"whatwg-fetch/fetch":619}],9:[function(require,module,exports){
+},{"./config":7,"angular2/core":11,"angular2/http":12,"ionic-native":365,"rxjs/RX":417,"whatwg-fetch":664}],9:[function(require,module,exports){
 'use strict';function __export(m) {
     for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
 }
@@ -27471,7 +27474,7 @@ var EventEmitter = (function (_super) {
     return EventEmitter;
 })(Subject_1.Subject);
 exports.EventEmitter = EventEmitter;
-},{"angular2/src/facade/lang":195,"angular2/src/facade/promise":197,"rxjs/Observable":368,"rxjs/Subject":373,"rxjs/observable/PromiseObservable":495,"rxjs/operator/toPromise":575}],188:[function(require,module,exports){
+},{"angular2/src/facade/lang":195,"angular2/src/facade/promise":197,"rxjs/Observable":413,"rxjs/Subject":418,"rxjs/observable/PromiseObservable":540,"rxjs/operator/toPromise":620}],188:[function(require,module,exports){
 'use strict';var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -28971,7 +28974,7 @@ var JSONPBackend_ = (function (_super) {
     return JSONPBackend_;
 })(JSONPBackend);
 exports.JSONPBackend_ = JSONPBackend_;
-},{"../base_response_options":203,"../enums":204,"../interfaces":208,"../static_response":210,"./browser_jsonp":198,"angular2/core":11,"angular2/src/facade/exceptions":192,"angular2/src/facade/lang":195,"rxjs/Observable":368}],201:[function(require,module,exports){
+},{"../base_response_options":203,"../enums":204,"../interfaces":208,"../static_response":210,"./browser_jsonp":198,"angular2/core":11,"angular2/src/facade/exceptions":192,"angular2/src/facade/lang":195,"rxjs/Observable":413}],201:[function(require,module,exports){
 'use strict';var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
     var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
     if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -29099,7 +29102,7 @@ var XHRBackend = (function () {
     return XHRBackend;
 })();
 exports.XHRBackend = XHRBackend;
-},{"../base_response_options":203,"../enums":204,"../headers":205,"../http_utils":207,"../static_response":210,"./browser_xhr":199,"angular2/core":11,"angular2/src/facade/lang":195,"rxjs/Observable":368}],202:[function(require,module,exports){
+},{"../base_response_options":203,"../enums":204,"../headers":205,"../http_utils":207,"../static_response":210,"./browser_xhr":199,"angular2/core":11,"angular2/src/facade/lang":195,"rxjs/Observable":413}],202:[function(require,module,exports){
 'use strict';var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
     function __() { this.constructor = d; }
@@ -39076,7 +39079,7 @@ exports.Codegen = Codegen;
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{"_process":365}],263:[function(require,module,exports){
+},{"_process":410}],263:[function(require,module,exports){
 "use strict";
 var dom_1 = require('../util/dom');
 var util_1 = require('../util/util');
@@ -65220,6 +65223,5302 @@ function throttle(fn, wait, options) {
 exports.throttle = throttle;
 
 },{}],365:[function(require,module,exports){
+function __export(m) {
+    for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
+}
+var ng1_1 = require('./ng1');
+ng1_1.initAngular1();
+var DEVICE_READY_TIMEOUT = 2000;
+var actionsheet_1 = require('./plugins/actionsheet');
+exports.ActionSheet = actionsheet_1.ActionSheet;
+var appavailability_1 = require('./plugins/appavailability');
+exports.AppAvailability = appavailability_1.AppAvailability;
+var apprate_1 = require('./plugins/apprate');
+exports.AppRate = apprate_1.AppRate;
+var appversion_1 = require('./plugins/appversion');
+exports.AppVersion = appversion_1.AppVersion;
+var badge_1 = require('./plugins/badge');
+exports.Badge = badge_1.Badge;
+var barcodescanner_1 = require('./plugins/barcodescanner');
+exports.BarcodeScanner = barcodescanner_1.BarcodeScanner;
+var base64togallery_1 = require('./plugins/base64togallery');
+exports.Base64ToGallery = base64togallery_1.Base64ToGallery;
+var batterystatus_1 = require('./plugins/batterystatus');
+exports.BatteryStatus = batterystatus_1.BatteryStatus;
+var ble_1 = require('./plugins/ble');
+exports.BLE = ble_1.BLE;
+var calendar_1 = require('./plugins/calendar');
+exports.Calendar = calendar_1.Calendar;
+var camera_1 = require('./plugins/camera');
+exports.Camera = camera_1.Camera;
+var clipboard_1 = require('./plugins/clipboard');
+exports.Clipboard = clipboard_1.Clipboard;
+var contacts_1 = require('./plugins/contacts');
+exports.Contacts = contacts_1.Contacts;
+var datepicker_1 = require('./plugins/datepicker');
+exports.DatePicker = datepicker_1.DatePicker;
+var dbmeter_1 = require('./plugins/dbmeter');
+exports.DBMeter = dbmeter_1.DBMeter;
+var device_1 = require('./plugins/device');
+exports.Device = device_1.Device;
+var devicemotion_1 = require('./plugins/devicemotion');
+exports.DeviceMotion = devicemotion_1.DeviceMotion;
+var deviceorientation_1 = require('./plugins/deviceorientation');
+exports.DeviceOrientation = deviceorientation_1.DeviceOrientation;
+var diagnostic_1 = require('./plugins/diagnostic');
+exports.Diagnostic = diagnostic_1.Diagnostic;
+var dialogs_1 = require('./plugins/dialogs');
+exports.Dialogs = dialogs_1.Dialogs;
+var facebook_1 = require('./plugins/facebook');
+exports.Facebook = facebook_1.Facebook;
+var file_1 = require('./plugins/file');
+exports.File = file_1.File;
+var flashlight_1 = require('./plugins/flashlight');
+exports.Flashlight = flashlight_1.Flashlight;
+var geolocation_1 = require('./plugins/geolocation');
+exports.Geolocation = geolocation_1.Geolocation;
+var globalization_1 = require('./plugins/globalization');
+exports.Globalization = globalization_1.Globalization;
+var hotspot_1 = require('./plugins/hotspot');
+exports.Hotspot = hotspot_1.Hotspot;
+var imagepicker_1 = require('./plugins/imagepicker');
+exports.ImagePicker = imagepicker_1.ImagePicker;
+var inappbrowser_1 = require('./plugins/inappbrowser');
+exports.InAppBrowser = inappbrowser_1.InAppBrowser;
+var keyboard_1 = require('./plugins/keyboard');
+exports.Keyboard = keyboard_1.Keyboard;
+var launchnavigator_1 = require('./plugins/launchnavigator');
+exports.LaunchNavigator = launchnavigator_1.LaunchNavigator;
+var localnotifications_1 = require('./plugins/localnotifications');
+exports.LocalNotifications = localnotifications_1.LocalNotifications;
+var network_1 = require('./plugins/network');
+exports.Network = network_1.Network;
+exports.Connection = network_1.Connection;
+var push_1 = require('./plugins/push');
+exports.Push = push_1.Push;
+var sms_1 = require('./plugins/sms');
+exports.SMS = sms_1.SMS;
+var socialsharing_1 = require('./plugins/socialsharing');
+exports.SocialSharing = socialsharing_1.SocialSharing;
+var spinnerdialog_1 = require('./plugins/spinnerdialog');
+exports.SpinnerDialog = spinnerdialog_1.SpinnerDialog;
+var splashscreen_1 = require('./plugins/splashscreen');
+exports.Splashscreen = splashscreen_1.Splashscreen;
+var statusbar_1 = require('./plugins/statusbar');
+exports.StatusBar = statusbar_1.StatusBar;
+var toast_1 = require('./plugins/toast');
+exports.Toast = toast_1.Toast;
+var touchid_1 = require('./plugins/touchid');
+exports.TouchID = touchid_1.TouchID;
+var vibration_1 = require('./plugins/vibration');
+exports.Vibration = vibration_1.Vibration;
+__export(require('./plugins/plugin'));
+// Window export to use outside of a module loading system
+window['IonicNative'] = {
+    ActionSheet: actionsheet_1.ActionSheet,
+    AppAvailability: appavailability_1.AppAvailability,
+    AppRate: apprate_1.AppRate,
+    AppVersion: appversion_1.AppVersion,
+    Badge: badge_1.Badge,
+    BarcodeScanner: barcodescanner_1.BarcodeScanner,
+    Base64ToGallery: base64togallery_1.Base64ToGallery,
+    BatteryStatus: batterystatus_1.BatteryStatus,
+    BLE: ble_1.BLE,
+    Calendar: calendar_1.Calendar,
+    Camera: camera_1.Camera,
+    Clipboard: clipboard_1.Clipboard,
+    Connection: network_1.Connection,
+    Contacts: contacts_1.Contacts,
+    DatePicker: datepicker_1.DatePicker,
+    DBMeter: dbmeter_1.DBMeter,
+    Device: device_1.Device,
+    DeviceMotion: devicemotion_1.DeviceMotion,
+    DeviceOrientation: deviceorientation_1.DeviceOrientation,
+    Dialogs: dialogs_1.Dialogs,
+    Diagnostic: diagnostic_1.Diagnostic,
+    Facebook: facebook_1.Facebook,
+    File: file_1.File,
+    Flashlight: flashlight_1.Flashlight,
+    Geolocation: geolocation_1.Geolocation,
+    Globalization: globalization_1.Globalization,
+    Hotspot: hotspot_1.Hotspot,
+    ImagePicker: imagepicker_1.ImagePicker,
+    InAppBrowser: inappbrowser_1.InAppBrowser,
+    Keyboard: keyboard_1.Keyboard,
+    LaunchNavigator: launchnavigator_1.LaunchNavigator,
+    LocalNotifications: localnotifications_1.LocalNotifications,
+    Network: network_1.Network,
+    Push: push_1.Push,
+    SMS: sms_1.SMS,
+    SocialSharing: socialsharing_1.SocialSharing,
+    SpinnerDialog: spinnerdialog_1.SpinnerDialog,
+    Splashscreen: splashscreen_1.Splashscreen,
+    StatusBar: statusbar_1.StatusBar,
+    Toast: toast_1.Toast,
+    TouchID: touchid_1.TouchID,
+    Vibration: vibration_1.Vibration
+};
+// To help developers using cordova, we listen for the device ready event and
+// log an error if it didn't fire in a reasonable amount of time. Generally,
+// when this happens, developers should remove and reinstall plugins, since
+// an inconsistent plugin is often the culprit.
+var before = +new Date;
+var didFireReady = false;
+document.addEventListener('deviceready', function () {
+    console.log('DEVICE READY FIRED AFTER', (+new Date - before), 'ms');
+    didFireReady = true;
+});
+setTimeout(function () {
+    if (!didFireReady && window.cordova) {
+        console.warn('Native: deviceready did not fire within ' + DEVICE_READY_TIMEOUT + 'ms. This can happen when plugins are in an inconsistent state. Try removing plugins from plugins/ and reinstalling them.');
+    }
+}, DEVICE_READY_TIMEOUT);
+
+},{"./ng1":366,"./plugins/actionsheet":367,"./plugins/appavailability":368,"./plugins/apprate":369,"./plugins/appversion":370,"./plugins/badge":371,"./plugins/barcodescanner":372,"./plugins/base64togallery":373,"./plugins/batterystatus":374,"./plugins/ble":375,"./plugins/calendar":376,"./plugins/camera":377,"./plugins/clipboard":378,"./plugins/contacts":379,"./plugins/datepicker":380,"./plugins/dbmeter":381,"./plugins/device":382,"./plugins/devicemotion":383,"./plugins/deviceorientation":384,"./plugins/diagnostic":385,"./plugins/dialogs":386,"./plugins/facebook":387,"./plugins/file":388,"./plugins/flashlight":389,"./plugins/geolocation":390,"./plugins/globalization":391,"./plugins/hotspot":392,"./plugins/imagepicker":393,"./plugins/inappbrowser":394,"./plugins/keyboard":395,"./plugins/launchnavigator":396,"./plugins/localnotifications":397,"./plugins/network":398,"./plugins/plugin":399,"./plugins/push":400,"./plugins/sms":401,"./plugins/socialsharing":402,"./plugins/spinnerdialog":403,"./plugins/splashscreen":404,"./plugins/statusbar":405,"./plugins/toast":406,"./plugins/touchid":407,"./plugins/vibration":408}],366:[function(require,module,exports){
+/**
+ * Initialize the ngCordova Angular module if we're running in ng1
+ */
+function initAngular1() {
+    if (window.angular) {
+        window.angular.module('ngCordova', []);
+    }
+}
+exports.initAngular1 = initAngular1;
+/**
+ * Publish a new Angular 1 service for this plugin.
+ */
+function publishAngular1Service(config, cls) {
+    var serviceName = '$cordova' + cls.name;
+    console.log('Registering Angular1 service', serviceName);
+    window.angular.module('ngCordova').service(serviceName, [function () {
+            var funcs = {};
+            for (var k in cls) {
+            }
+            return funcs;
+        }]);
+}
+exports.publishAngular1Service = publishAngular1Service;
+
+},{}],367:[function(require,module,exports){
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var plugin_1 = require('./plugin');
+/**
+ * @name Action Sheet
+ * @description
+ * The ActionSheet plugin shows a native list of options the user can choose from.
+ *
+ * Requires Cordova plugin: `cordova-plugin-actionsheet`. For more info, please see the [ActionSheet plugin docs](https://github.com/EddyVerbruggen/cordova-plugin-actionsheet).
+ *
+ * @usage
+ * ```ts
+ * import {ActionSheet} from 'ionic-native';
+ *
+ * let buttonLabels = ['Share via Facebook', 'Share via Twitter'];
+ * ActionSheet.show({
+ *   'title': 'What do you want with this image?',
+ *   'buttonLabels': buttonLabels,
+ *   'addCancelButtonWithLabel': 'Cancel',
+ *   'addDestructiveButtonWithLabel' : 'Delete'
+ * }).then(buttonIndex => {
+ *   console.log('Button pressed: ' + buttonLabels[buttonIndex - 1]);
+ * });
+ * ```
+ *
+ */
+var ActionSheet = (function () {
+    function ActionSheet() {
+    }
+    /**
+     * Show the ActionSheet. The ActionSheet's options is an object with the following propterties.
+     *
+     * | Option                        | Type      | Description                                  |
+     * |-------------------------------|-----------|----------------------------------------------|
+     * | title                         |`string`   | The title for the actionsheet                |
+     * | buttonLabels                  |`string[]` | the labels for the buttons. Uses the index x |
+     * | androidTheme                  |`number`   | Theme to bue used on Android                 |
+     * | androidEnableCancelButton     |`boolean`  | Enable a cancel on Android                   |
+     * | winphoneEnableCancelButton    |`boolean`  | Enable a cancel on Android                   |
+     * | addCancelButtonWithLabel      |`string`   | Add a cancle button with text                |
+     * | addDestructiveButtonWithLabel |`string`   | Add a destructive button with text           |
+     * | position                      |`number[]` | On an iPad, set the X,Y position             |
+     *
+     * @param {options} Options See table above
+     * @returns {Promise} Returns a Promise that resolves with the index of the
+     *   button pressed (1 based, so 1, 2, 3, etc.)
+     */
+    ActionSheet.show = function (options) { return; };
+    /**
+     * Hide the ActionSheet.
+     */
+    ActionSheet.hide = function () { return; };
+    __decorate([
+        plugin_1.Cordova()
+    ], ActionSheet, "show", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], ActionSheet, "hide", null);
+    ActionSheet = __decorate([
+        plugin_1.Plugin({
+            plugin: 'cordova-plugin-actionsheet',
+            pluginRef: 'plugins.actionsheet',
+            repo: 'https://github.com/EddyVerbruggen/cordova-plugin-actionsheet',
+            platforms: ['Android', 'iOS', 'Windows Phone 8']
+        })
+    ], ActionSheet);
+    return ActionSheet;
+})();
+exports.ActionSheet = ActionSheet;
+
+},{"./plugin":399}],368:[function(require,module,exports){
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var plugin_1 = require('./plugin');
+/**
+ * @name App Availability
+ * @description
+ * This plugin allows you to check if an app is installed on the user's device. It requires an URI Scheme (e.g. twitter://) on iOS or a Package Name (e.g com.twitter.android) on Android.
+ *
+ * Requires Cordova plugin: cordova-plugin-appavailability. For more info, please see the [AppAvailability plugin docs](https://github.com/ohh2ahh/AppAvailability).
+ *
+ * @usage
+ * ```js
+ * import {AppAvailability} from 'ionic-native';
+ *
+ *
+ * var app;
+ *
+ * if(device.platform === 'iOS') {
+ *   app = 'twitter://';
+ * }else if(device.platform === 'Android'){
+ *   app = 'com.twitter.android';
+ * }
+ *
+ * AppAvailability.check(app)
+ *   .then(
+ *     yes => console.log(app + " is available"),
+ *     no => console.log(app + " is NOT available")
+ *   );
+ * ```
+ */
+var AppAvailability = (function () {
+    function AppAvailability() {
+    }
+    /**
+     * Checks if an app is available on device
+     * @param app Package name on android, or URI scheme on iOS
+     * @returns {Promise<boolean>}
+     */
+    AppAvailability.check = function (app) { return; };
+    __decorate([
+        plugin_1.Cordova()
+    ], AppAvailability, "check", null);
+    AppAvailability = __decorate([
+        plugin_1.Plugin({
+            plugin: 'cordova-plugin-appavailability',
+            pluginRef: 'appAvailability',
+            repo: 'https://github.com/ohh2ahh/AppAvailability',
+            platforms: ['Android', 'iOS']
+        })
+    ], AppAvailability);
+    return AppAvailability;
+})();
+exports.AppAvailability = AppAvailability;
+
+},{"./plugin":399}],369:[function(require,module,exports){
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var plugin_1 = require('./plugin');
+/**
+ * @name App Rate
+ * @description
+ * The AppRate plugin makes it easy to prompt the user to rate your app, either now, later, or never.
+ *
+ * Requires Cordova plugin: cordova-plugin-apprate. For more info, please see the [AppRate plugin docs](https://github.com/pushandplay/cordova-plugin-apprate).
+ *
+ * @usage
+ * ```js
+ * import {AppRate} from 'ionic-native';
+ *
+ *
+ * AppRate.preferences.storeAppURL.ios = '<my_app_id>';
+ * AppRate.preferences.storeAppURL.android = 'market://details?id=<package_name>';
+ * AppRate.preferences.storeAppURL.blackberry = 'appworld://content/[App Id]/';
+ * AppRate.preferences.storeAppURL.windows8 = 'ms-windows-store:Review?name=<the Package Family Name of the application>';
+ * AppRate.promptForRating();
+ * ```
+ */
+var AppRate = (function () {
+    function AppRate() {
+    }
+    Object.defineProperty(AppRate, "preferences", {
+        /**
+         * Rating dialog preferences
+         *
+         * useLanguage {String} null - custom BCP 47 language tag
+         * displayAppName {String} '' - custom application title
+         * promptAgainForEachNewVersion {Boolean} true - show dialog again when application version will be updated
+         * usesUntilPrompt {Integer} 3 - count of runs of application before dialog will be displayed
+         * openStoreInApp {Boolean} false - leave app or no when application page opened in app store (now supported only for iOS)
+         * useCustomRateDialog {Boolean} false - use custom view for rate dialog
+         * callbacks.onButtonClicked {Function} null - call back function. called when user clicked on rate-dialog buttons
+         * callbacks.onRateDialogShow {Function} null - call back function. called when rate-dialog showing
+         * storeAppURL.ios {String} null - application id in AppStore
+         * storeAppURL.android {String} null - application URL in GooglePlay
+         * storeAppURL.blackberry {String} null - application URL in AppWorld
+         * storeAppURL.windows8 {String} null - application URL in WindowsStore
+         * customLocale {Object} null - custom locale object
+         * @type {{}}
+         */
+        get: function () { return window.AppRate.preferences; },
+        enumerable: true,
+        configurable: true
+    });
+    /**
+     * Prompts the user for rating
+     *
+     * @param {boolean} immediately  Show the rating prompt immediately.
+     */
+    AppRate.promptForRating = function (immediately) { };
+    ;
+    __decorate([
+        plugin_1.CordovaProperty
+    ], AppRate, "preferences", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], AppRate, "promptForRating", null);
+    AppRate = __decorate([
+        plugin_1.Plugin({
+            plugin: 'cordova-plugin-apprate',
+            pluginRef: 'AppRate',
+            repo: 'https://github.com/pushandplay/cordova-plugin-apprate',
+            platforms: ['Android', 'iOS']
+        })
+    ], AppRate);
+    return AppRate;
+})();
+exports.AppRate = AppRate;
+
+},{"./plugin":399}],370:[function(require,module,exports){
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var plugin_1 = require('./plugin');
+/**
+ * @name App Version
+ * @description
+ * Reads the version of your app from the target build settings.
+ *
+ * Requires Cordova plugin: `cordova-plugin-app-version`. For more info, please see the [Cordova App Version docs](https://github.com/whiteoctober/cordova-plugin-app-version).
+ *
+ * @usage
+ * ```js
+ * import {AppVersion} from 'ionic-native';
+ *
+ *
+ *  AppVersion.getAppName();
+ *  AppVersion.getPackageName();
+ *  AppVersion.getVersionCode();
+ *  AppVersion.getVersionNumber();
+ * ```
+ */
+var AppVersion = (function () {
+    function AppVersion() {
+    }
+    /**
+     * Returns the name of the app
+     * @returns {Promise}
+     */
+    AppVersion.getAppName = function () { return; };
+    /**
+     * Returns the package name of the app
+     * @returns {Promise}
+     */
+    AppVersion.getPackageName = function () { return; };
+    /**
+     * Returns the build identifier of the app
+     * @returns {Promise}
+     */
+    AppVersion.getVersionCode = function () { return; };
+    /**
+     * Returns the version of the app
+     * @returns {Promise}
+     */
+    AppVersion.getVersionNumber = function () { return; };
+    __decorate([
+        plugin_1.Cordova()
+    ], AppVersion, "getAppName", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], AppVersion, "getPackageName", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], AppVersion, "getVersionCode", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], AppVersion, "getVersionNumber", null);
+    AppVersion = __decorate([
+        plugin_1.Plugin({
+            plugin: 'cordova-plugin-app-version',
+            pluginRef: 'cordova.getAppVersion',
+            repo: 'https://github.com/whiteoctober/cordova-plugin-app-version',
+            platforms: ['Android', 'iOS']
+        })
+    ], AppVersion);
+    return AppVersion;
+})();
+exports.AppVersion = AppVersion;
+
+},{"./plugin":399}],371:[function(require,module,exports){
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var plugin_1 = require('./plugin');
+/**
+ * @name Badge
+ * @description
+ * The essential purpose of badge numbers is to enable an application to inform its users that it has something for them — for example, unread messages — when the application isn’t running in the foreground.
+ *
+ * Requires Cordova plugin: cordova-plugin-badge. For more info, please see the [Badge plugin docs](https://github.com/katzer/cordova-plugin-badge).
+ *
+ * @usage
+ * ```js
+ * import {Badge} from 'ionic-native';
+ *
+ *
+ * Badge.set(10);
+ * Badge.increase();
+ * Badge.clear();
+ * ```
+ */
+var Badge = (function () {
+    function Badge() {
+    }
+    /**
+     * Clear the badge of the app icon.
+     */
+    Badge.clear = function () { return; };
+    /**
+     * Set the badge of the app icon.
+     * @param {number} number  The new badge number.
+     * @returns {Promise}
+     */
+    Badge.set = function (number) { return; };
+    /**
+     * Get the badge of the app icon.
+     * @returns {Promise}
+     */
+    Badge.get = function () { return; };
+    /**
+     * Increase the badge number.
+     * @param {number} count  Count to add to the current badge number
+     * @returns {Promise}
+     */
+    Badge.increase = function (number) { return; };
+    /**
+     * Decrease the badge number.
+     * @param {number} count  Count to subtract from the current badge number
+     * @returns {Promise}
+     */
+    Badge.decrease = function (number) { return; };
+    /**
+     * Determine if the app has permission to show badges.
+     */
+    Badge.hasPermission = function () { return; };
+    /**
+     * Register permission to set badge notifications
+     * @returns {Promise}
+     */
+    Badge.registerPermission = function () { return; };
+    __decorate([
+        plugin_1.Cordova()
+    ], Badge, "clear", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Badge, "set", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Badge, "get", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Badge, "increase", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Badge, "decrease", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Badge, "hasPermission", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Badge, "registerPermission", null);
+    Badge = __decorate([
+        plugin_1.Plugin({
+            plugin: 'cordova-plugin-badge',
+            pluginRef: 'cordova.plugins.notification.badge',
+            repo: 'https://github.com/katzer/cordova-plugin-badge',
+            platforms: ['Android', 'iOS', 'Browser', 'Windows', 'Amazon FireOS', 'Windows Phone 8']
+        })
+    ], Badge);
+    return Badge;
+})();
+exports.Badge = Badge;
+
+},{"./plugin":399}],372:[function(require,module,exports){
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var plugin_1 = require('./plugin');
+/**
+ * @name Barcode Scanner
+ * @description
+ * The Barcode Scanner Plugin opens a camera view and automatically scans a barcode, returning the data back to you.
+ *
+ * Requires Cordova plugin: `phonegap-plugin-barcodescanner`. For more info, please see the [BarcodeScanner plugin docs](https://github.com/phonegap/phonegap-plugin-barcodescanner).
+ *
+ * @usage
+ * ```js
+ * import {BarcodeScanner} from 'ionic-native';
+ *
+ *
+ * BarcodeScanner.scan().then((barcodeData) => {
+ *  // Success! Barcode data is here
+ * }, (err) => {
+ * 	// An error occurred
+ * });
+ * ```
+ */
+var BarcodeScanner = (function () {
+    function BarcodeScanner() {
+    }
+    /**
+     * Open the barcode scanner.
+     * @return Returns a Promise that resolves with scanner data, or rejects with an error.
+     */
+    BarcodeScanner.scan = function () { return; };
+    __decorate([
+        plugin_1.Cordova()
+    ], BarcodeScanner, "scan", null);
+    BarcodeScanner = __decorate([
+        plugin_1.Plugin({
+            plugin: 'phonegap-plugin-barcodescanner',
+            pluginRef: 'cordova.plugins.barcodeScanner',
+            repo: 'https://github.com/phonegap/phonegap-plugin-barcodescanner',
+            platforms: ['Android', 'iOS', 'Windows Phone 8', 'Windows 10', 'Windows 8', 'BlackBerry 10', 'Browser']
+        })
+    ], BarcodeScanner);
+    return BarcodeScanner;
+})();
+exports.BarcodeScanner = BarcodeScanner;
+
+},{"./plugin":399}],373:[function(require,module,exports){
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var plugin_1 = require('./plugin');
+/**
+ * @name Base64 To Gallery
+ * @description This plugin allows you to save base64 data as a png image into the device
+ * @usage
+ * ```ts
+ * import {Base64ToGallery} from 'ionic-native';
+ *
+ *
+ * Base64ToGallery.base64ToGallery(base64Data, 'img_').then(
+ *   res => console.log("Saved image to gallery ", res),
+ *   err => console.log("Error saving image to gallery ", err)
+ * );
+ * ```
+ */
+var Base64ToGallery = (function () {
+    function Base64ToGallery() {
+    }
+    /**
+     * Converts a base64 string to an image file in the device gallery
+     * @param data
+     * @param prefix
+     */
+    Base64ToGallery.prototype.base64ToGallery = function (data, prefix) {
+        return;
+    };
+    __decorate([
+        plugin_1.Cordova()
+    ], Base64ToGallery.prototype, "base64ToGallery", null);
+    Base64ToGallery = __decorate([
+        plugin_1.Plugin({
+            plugin: 'cordova-base64-to-gallery',
+            pluginRef: 'cordova',
+            repo: 'https://github.com/Nexxa/cordova-base64-to-gallery',
+            platforms: ['Android', 'iOS', 'Windows Phone 8']
+        })
+    ], Base64ToGallery);
+    return Base64ToGallery;
+})();
+exports.Base64ToGallery = Base64ToGallery;
+
+},{"./plugin":399}],374:[function(require,module,exports){
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var plugin_1 = require('./plugin');
+/**
+ * @name Battery Status
+ * @description
+ * Requires Cordova plugin: cordova-plugin-batterystatus. For more info, please see the [BatteryStatus plugin docs](https://github.com/apache/cordova-plugin-battery-status).
+ *
+ * @usage
+ * ```js
+ * import {BatteryStatus} from 'ionic-native';
+ *
+ *
+ *
+ * // watch change in battery status
+ * let subscription = BatteryStatus.onChange().subscribe(
+ *  status => {
+ *    console.log(status.level, status.isPlugged);
+ *  }
+ * );
+ *
+ * // stop watch
+ * subscription.unsubscribe();
+ *
+ * ```
+ */
+var BatteryStatus = (function () {
+    function BatteryStatus() {
+    }
+    /**
+     * Watch the change in battery level
+     * @returns {Observable} Returns an observable that pushes a status object
+     */
+    BatteryStatus.onChange = function () { return; };
+    /**
+     * Watch when the battery level goes low
+     * @returns {Observable<StatusObject>} Returns an observable that pushes a status object
+     */
+    BatteryStatus.onLow = function () { return; };
+    /**
+     * Watch when the battery level goes to critial
+     * @returns {Observable<StatusObject>} Returns an observable that pushes a status object
+     */
+    BatteryStatus.onCritical = function () { return; };
+    __decorate([
+        plugin_1.Cordova({
+            eventObservable: true,
+            event: 'batterylevel'
+        })
+    ], BatteryStatus, "onChange", null);
+    __decorate([
+        plugin_1.Cordova({
+            eventObservable: true,
+            event: 'batterylow'
+        })
+    ], BatteryStatus, "onLow", null);
+    __decorate([
+        plugin_1.Cordova({
+            eventObservable: true,
+            event: 'batterycritical'
+        })
+    ], BatteryStatus, "onCritical", null);
+    BatteryStatus = __decorate([
+        plugin_1.Plugin({
+            plugin: 'cordova-plugin-batterystatus',
+            repo: 'https://github.com/apache/cordova-plugin-battery-status',
+            platforms: ['Amazon Fire OS', 'iOS', 'Android', 'BlackBerry 10', 'Windows Phone 7', 'Windows Phone 8', 'Windows', 'Firefox OS', 'Browser']
+        })
+    ], BatteryStatus);
+    return BatteryStatus;
+})();
+exports.BatteryStatus = BatteryStatus;
+
+},{"./plugin":399}],375:[function(require,module,exports){
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var plugin_1 = require('./plugin');
+/**
+ * @name BLE
+ * @description
+ * This plugin enables communication between a phone and Bluetooth Low Energy (BLE) peripherals.
+ *
+ * The plugin provides a simple JavaScript API for iOS and Android.
+ *
+ * - Scan for peripherals
+ * - Connect to a peripheral
+ * - Read the value of a characteristic
+ * - Write new value to a characteristic
+ * - Get notified when characteristic's value changes
+ *
+ * Advertising information is returned when scanning for peripherals. Service, characteristic, and property info is returned when connecting to a peripheral. All access is via service and characteristic UUIDs. The plugin manages handles internally.
+ *
+ * Simultaneous connections to multiple peripherals are supported.
+ *
+ * @usage
+ *
+ * ## Peripheral Data
+ *
+ * Peripheral Data is passed to the success callback when scanning and connecting. Limited data is passed when scanning.
+ *
+ * ```ts
+ *   {
+ *       "name": "Battery Demo",
+ *       "id": "20:FF:D0:FF:D1:C0",
+ *       "advertising": [2,1,6,3,3,15,24,8,9,66,97,116,116,101,114,121],
+ *       "rssi": -55
+ *   }
+ * ```
+ * After connecting, the peripheral object also includes service, characteristic and descriptor information.
+ *
+ * ```ts
+ *   {
+ *       "name": "Battery Demo",
+ *       "id": "20:FF:D0:FF:D1:C0",
+ *       "advertising": [2,1,6,3,3,15,24,8,9,66,97,116,116,101,114,121],
+ *       "rssi": -55,
+ *       "services": [
+ *           "1800",
+ *           "1801",
+ *           "180f"
+ *       ],
+ *       "characteristics": [
+ *           {
+ *               "service": "1800",
+ *               "characteristic": "2a00",
+ *               "properties": [
+ *                   "Read"
+ *               ]
+ *           },
+ *           {
+ *               "service": "1800",
+ *               "characteristic": "2a01",
+ *               "properties": [
+ *                   "Read"
+ *               ]
+ *           },
+ *           {
+ *               "service": "1801",
+ *               "characteristic": "2a05",
+ *               "properties": [
+ *                   "Read"
+ *               ]
+ *           },
+ *           {
+ *               "service": "180f",
+ *               "characteristic": "2a19",
+ *               "properties": [
+ *                   "Read"
+ *               ],
+ *               "descriptors": [
+ *                   {
+ *                       "uuid": "2901"
+ *                   },
+ *                   {
+ *                       "uuid": "2904"
+ *                   }
+ *               ]
+ *           }
+ *       ]
+ *   }
+ * ```
+ *
+ * ## Advertising Data
+ * Bluetooth advertising data is returned in when scanning for devices. The format format varies depending on your platform. On Android advertising data will be the raw advertising bytes. iOS does not allow access to raw advertising data, so a dictionary of data is returned.
+ *
+ * The advertising information for both Android and iOS appears to be a combination of advertising data and scan response data.
+ *
+ * ### Android
+ *
+ * ```ts
+ *   {
+ *       "name": "demo",
+ *       "id": "00:1A:7D:DA:71:13",
+ *       "advertising": ArrayBuffer,
+ *      "rssi": -37
+ *  }
+ * ```
+ *
+ * Convert the advertising info to a Uint8Array for processing. `var adData = new Uint8Array(peripheral.advertising)`
+ *
+ * ### iOS
+ *
+ * Note that iOS uses the string value of the constants for the [Advertisement Data Retrieval Keys](https://developer.apple.com/library/ios/documentation/CoreBluetooth/Reference/CBCentralManagerDelegate_Protocol/index.html#//apple_ref/doc/constant_group/Advertisement_Data_Retrieval_Keys). This will likely change in the future.
+ *
+ * ```ts
+ *   {
+ *       "name": "demo",
+ *       "id": "D8479A4F-7517-BCD3-91B5-3302B2F81802",
+ *       "advertising": {
+ *           "kCBAdvDataChannel": 37,
+ *           "kCBAdvDataServiceData": {
+ *               "FED8": {
+ *                   "byteLength": 7 // data not shown
+ *               }
+ *           },
+ *           "kCBAdvDataLocalName": "demo",
+ *           "kCBAdvDataServiceUUIDs": ["FED8"],
+ *           "kCBAdvDataManufacturerData": {
+ *               "byteLength": 7  // data not shown
+ *           },
+ *           "kCBAdvDataTxPowerLevel": 32,
+ *           "kCBAdvDataIsConnectable": true
+ *       },
+ *       "rssi": -53
+ *   }
+ * ```
+ *
+ * ## Typed Arrays
+ *
+ * This plugin uses typed Arrays or ArrayBuffers for sending and receiving data.
+ *
+ * This means that you need convert your data to ArrayBuffers before sending and from ArrayBuffers when receiving.
+ *
+ * ```ts
+ *   // ASCII only
+ *   function stringToBytes(string) {
+ *      var array = new Uint8Array(string.length);
+ *      for (var i = 0, l = string.length; i < l; i++) {
+ *          array[i] = string.charCodeAt(i);
+ *       }
+ *       return array.buffer;
+ *   }
+ *
+ *   // ASCII only
+ *   function bytesToString(buffer) {
+ *       return String.fromCharCode.apply(null, new Uint8Array(buffer));
+ *   }
+ * ```
+ * You can read more about typed arrays in these articles on [MDN](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Typed_arrays) and [HTML5 Rocks](http://www.html5rocks.com/en/tutorials/webgl/typed_arrays/).
+ *
+ * ## UUIDs
+ *
+ * UUIDs are always strings and not numbers. Some 16-bit UUIDs, such as '2220' look like integers, but they're not. (The integer 2220 is 0x8AC in hex.) This isn't a problem with 128 bit UUIDs since they look like strings 82b9e6e1-593a-456f-be9b-9215160ebcac. All 16-bit UUIDs should also be passed to methods as strings.
+ *
+ */
+var BLE = (function () {
+    function BLE() {
+    }
+    /**
+     * Scan and discover BLE peripherals for the specified amount of time.
+     *
+     * @usage
+     * ```
+     * BLE.scan([], 5).subscribe(device => {
+     *   console.log(JSON.stringify(device));
+     * });
+     * ```
+     * @param {string[]} services  List of service UUIDs to discover, or `[]` to find all devices
+     * @param {number} seconds  Number of seconds to run discovery
+     * @return Returns an Observable that notifies of each peripheral that is discovered during the specified time.
+     */
+    BLE.scan = function (services, seconds) { return; };
+    /**
+     * Scan and discover BLE peripherals until `stopScan` is called.
+     *
+     * @usage
+     * ```
+     * BLE.startScan([]).subscribe(device => {
+     *   console.log(JSON.stringify(device));
+     * });
+     *
+     * setTimeout(() => {
+     *   BLE.stopScan();
+     * }, 5000);
+     * ```
+     * @param {string[]} services  List of service UUIDs to discover, or `[]` to find all devices
+     * @return Returns an Observable that notifies of each peripheral discovered.
+     */
+    BLE.startScan = function (services) { return; };
+    /**
+     * Stop a scan started by `startScan`.
+     *
+     * @usage
+     * ```
+     * BLE.startScan([]).subscribe(device => {
+     *   console.log(JSON.stringify(device));
+     * });
+     * setTimeout(() => {
+     *   BLE.stopScan().then(() => { console.log('scan stopped'); });
+     * }, 5000);
+     * ```
+     * @return returns a Promise.
+     */
+    BLE.stopScan = function () { return; };
+    /**
+     * Connect to a peripheral.
+     * @usage
+     * ```
+     *   BLE.connect('12:34:56:78:9A:BC').subscribe(peripheralData => {
+     *     console.log(peripheralData);
+     *   },
+     *   peripheralData => {
+     *     console.log('disconnected');
+     *   });
+     * ```
+     * @param deviceId {string}  UUID or MAC address of the peripheral
+     * @return Returns an Observable that notifies of connect/disconnect.
+     */
+    BLE.connect = function (deviceId) { return; };
+    /**
+     * Disconnect from a peripheral.
+     * @usage
+     * ```
+     *   BLE.disconnect('12:34:56:78:9A:BC').then(() => {
+     *     console.log('Disconnected');
+     *   });
+     * ```
+     * @param deviceId {string}  UUID or MAC address of the peripheral
+     * @return Returns a Promise
+     */
+    BLE.disconnect = function (deviceId) { return; };
+    /**
+     * Read the value of a characteristic.
+     *
+     * @param {string} device_id  UUID or MAC address of the peripheral
+     * @param {string} service_uuid  UUID of the BLE service
+     * @param {string} characteristic_uuid  UUID of the BLE characteristic
+     * @return Returns a Promise
+     */
+    BLE.read = function (deviceId, serviceUUID, characteristicUUID) { return; };
+    ;
+    /**
+     * Write the value of a characteristic.
+     * @usage
+     * ```
+     * // send 1 byte to switch a light on
+     * var data = new Uint8Array(1);
+     * data[0] = 1;
+     * BLE.write(device_id, "FF10", "FF11", data.buffer);
+     *
+     * // send a 3 byte value with RGB color
+     * var data = new Uint8Array(3);
+     * data[0] = 0xFF;  // red
+     * data[0] = 0x00; // green
+     * data[0] = 0xFF; // blue
+     * BLE.write(device_id, "ccc0", "ccc1", data.buffer);
+     *
+     * // send a 32 bit integer
+     * var data = new Uint32Array(1);
+     * data[0] = counterInput.value;
+     * BLE.write(device_id, SERVICE, CHARACTERISTIC, data.buffer);
+     *
+     * ```
+     * @param {string} device_id  UUID or MAC address of the peripheral
+     * @param {string} service_uuid  UUID of the BLE service
+     * @param {string} characteristic_uuid  UUID of the BLE characteristic
+     * @param {ArrayBuffer} value  Data to write to the characteristic, as an ArrayBuffer.
+     * @return Returns a Promise
+     */
+    BLE.write = function (deviceId, serviceUUID, characteristicUUID, value) { return; };
+    /**
+     * Write the value of a characteristic without waiting for confirmation from the peripheral.
+     *
+     * @param {string} device_id  UUID or MAC address of the peripheral
+     * @param {string} service_uuid  UUID of the BLE service
+     * @param {string} characteristic_uuid  UUID of the BLE characteristic
+     * @param {ArrayBuffer} value  Data to write to the characteristic, as an ArrayBuffer.
+     * @return Returns a Promise
+     */
+    BLE.writeWithoutResponse = function (deviceId, serviceUUID, characteristicUUID, value) { return; };
+    /**
+     * Register to be notified when the value of a characteristic changes.
+     *
+     * @usage
+     * ```
+     * BLE.startNotification(device_id, "FF10", "FF11").subscribe(buffer => {
+     *   console.log(String.fromCharCode.apply(null, new Uint8Array(buffer));
+     * });
+     * ```
+     *
+     * @param {string} device_id  UUID or MAC address of the peripheral
+     * @param {string} service_uuid  UUID of the BLE service
+     * @param {string} characteristic_uuid  UUID of the BLE characteristic
+     * @return Returns an Observable that notifies of characteristic changes.
+     */
+    BLE.startNotification = function (deviceId, serviceUUID, characteristicUUID) { return; };
+    /**
+     * Stop being notified when the value of a characteristic changes.
+     *
+     * @param {string} device_id  UUID or MAC address of the peripheral
+     * @param {string} service_uuid  UUID of the BLE service
+     * @param {string} characteristic_uuid  UUID of the BLE characteristic
+     * @return Returns a Promise.
+     */
+    BLE.stopNotification = function (deviceId, serviceUUID, characteristicUUID) { return; };
+    /**
+     * Report the connection status.
+     *
+     * @usage
+     * ```
+     * BLE.isConnected('FFCA0B09-CB1D-4DC0-A1EF-31AFD3EDFB53').then(
+     *   () => { console.log('connected'); },
+     *   () => { console.log('not connected'); }
+     * );
+     * ```
+     * @param {string} device_id  UUID or MAC address of the peripheral
+     * @return Returns a Promise.
+     */
+    BLE.isConnected = function (deviceId) { return; };
+    /**
+     * Report if bluetooth is enabled.
+     *
+     * @usage
+     * ```
+     * BLE.isEnabled().then(
+     *   () => { console.log('enabled'); },
+     *   () => { console.log('not enabled'); }
+     * );
+     * ```
+     * @return Returns a Promise.
+     */
+    BLE.isEnabled = function () { return; };
+    /**
+     * Open System Bluetooth settings (Android only).
+     *
+     * @return Returns a Promise.
+     */
+    BLE.showBluetoothSettings = function () { return; };
+    /**
+     * Enable Bluetooth on the device (Android only).
+     *
+     * @return Returns a Promise.
+     */
+    BLE.enable = function () { return; };
+    __decorate([
+        plugin_1.Cordova({
+            observable: true
+        })
+    ], BLE, "scan", null);
+    __decorate([
+        plugin_1.Cordova({
+            observable: true,
+            clearFunction: 'stopScan',
+            clearWithArgs: true
+        })
+    ], BLE, "startScan", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], BLE, "stopScan", null);
+    __decorate([
+        plugin_1.Cordova({
+            observable: true,
+            clearFunction: 'disconnect',
+            clearWithArgs: true
+        })
+    ], BLE, "connect", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], BLE, "disconnect", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], BLE, "read", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], BLE, "write", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], BLE, "writeWithoutResponse", null);
+    __decorate([
+        plugin_1.Cordova({
+            observable: true,
+            clearFunction: 'stopNotification',
+            clearWithArgs: true
+        })
+    ], BLE, "startNotification", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], BLE, "stopNotification", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], BLE, "isConnected", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], BLE, "isEnabled", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], BLE, "showBluetoothSettings", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], BLE, "enable", null);
+    BLE = __decorate([
+        plugin_1.Plugin({
+            plugin: 'cordova-plugin-ble-central',
+            pluginRef: 'ble',
+            repo: 'https://github.com/don/cordova-plugin-ble-central',
+            platforms: ['iOS', 'Android']
+        })
+    ], BLE);
+    return BLE;
+})();
+exports.BLE = BLE;
+
+},{"./plugin":399}],376:[function(require,module,exports){
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var plugin_1 = require('./plugin');
+/**
+ * @name Calendar
+ * @description
+ * This plugin allows you to add events to the Calendar of the mobile device.
+ *
+ * Requires Cordova plugin: `cordova-plugin-calendar`. For more info, please see the [Calendar plugin docs](https://github.com/EddyVerbruggen/Calendar-PhoneGap-Plugin).
+ *
+ * @usage
+ *
+ */
+var Calendar = (function () {
+    function Calendar() {
+    }
+    /**
+     * Create a calendar. (iOS only)
+     *
+     * @usage
+     * ```
+     * import {Calendar} from 'ionic-native';
+     *
+     *
+     *
+     * Calendar.createCalendar('MyCalendar').then(
+     *   (msg) => { console.log(msg); },
+     *   (err) => { console.log(err); }
+     * );
+     * ```
+     *
+     * @param {string | Object} nameOrOptions  either a string name or a options object.
+     * options:
+     *   calendarName: string  the name of the calendar
+     *   calendarColor: string  the hex color of the calendar
+     * @return Returns a Promise
+     */
+    Calendar.createCalendar = function (nameOrOptions) { return; };
+    /**
+     * Delete a calendar. (iOS only)
+     *
+     * @usage
+     * ```
+     * Calendar.deleteCalendar('MyCalendar').then(
+     *   (msg) => { console.log(msg); },
+     *   (err) => { console.log(err); }
+     * );
+     * ```
+     *
+     * @param {string} name  Name of the calendar to delete.
+     * @return Returns a Promise
+     */
+    Calendar.deleteCalendar = function (name) { return; };
+    /**
+     * Returns the default calendar options.
+     *
+     * @return Returns an object with the default calendar options:
+     *   firstReminderMinutes: 60,
+     *   secondReminderMinutes: null,
+     *   recurrence: null, // options are: 'daily', 'weekly', 'monthly', 'yearly'
+     *   recurrenceInterval: 1, // only used when recurrence is set
+     *   recurrenceEndDate: null,
+     *   calendarName: null,
+     *   calendarId: null,
+     *   url: null
+     */
+    Calendar.getCalendarOptions = function () {
+        return {
+            firstReminderMinutes: 60,
+            secondReminderMinutes: null,
+            recurrence: null,
+            recurrenceInterval: 1,
+            recurrenceEndDate: null,
+            calendarName: null,
+            calendarId: null,
+            url: null
+        };
+    };
+    /**
+     * Silently create an event.
+     *
+     * @param {string} [title]  The event title
+     * @param {string} [location]  The event location
+     * @param {string} [notes]  The event notes
+     * @param {Date} [startDate]  The event start date
+     * @param {Date} [endDate]  The event end date
+     * @return Returns a Promise
+     */
+    Calendar.createEvent = function (title, location, notes, startDate, endDate) { return; };
+    /**
+     * Silently create an event with additional options.
+     *
+     * @param {string} [title]  The event title
+     * @param {string} [location]  The event location
+     * @param {string} [notes]  The event notes
+     * @param {Date} [startDate]  The event start date
+     * @param {Date} [endDate]  The event end date
+     * @param {CalendarOptions} [options]  Additional options, see `getCalendarOptions`
+     * @return Returns a Promise
+     */
+    Calendar.createEventWithOptions = function (title, location, notes, startDate, endDate, options) { return; };
+    /**
+     * Interactively create an event.
+     *
+     * @param {string} [title]  The event title
+     * @param {string} [location]  The event location
+     * @param {string} [notes]  The event notes
+     * @param {Date} [startDate]  The event start date
+     * @param {Date} [endDate]  The event end date
+     * @return Returns a Promise
+     */
+    Calendar.createEventInteractively = function (title, location, notes, startDate, endDate) { return; };
+    /**
+     * Interactively create an event with additional options.
+     *
+     * @param {string} [title]  The event title
+     * @param {string} [location]  The event location
+     * @param {string} [notes]  The event notes
+     * @param {Date} [startDate]  The event start date
+     * @param {Date} [endDate]  The event end date
+     * @param {CalendarOptions} [options]  Additional options, see `getCalendarOptions`
+     * @return Returns a Promise
+     */
+    Calendar.createEventInteractivelyWithOptions = function (title, location, notes, startDate, endDate, options) { return; };
+    // deprecated
+    // @Cordova()
+    // static createEventInNamedCalendar(
+    //   title?: string,
+    //   location?: string,
+    //   notes?: string,
+    //   startDate?: Date,
+    //   endDate?: Date,
+    //   calendarName?: string
+    // ) {}
+    /**
+     * Find an event.
+     *
+     * @param {string} [title]  The event title
+     * @param {string} [location]  The event location
+     * @param {string} [notes]  The event notes
+     * @param {Date} [startDate]  The event start date
+     * @param {Date} [endDate]  The event end date
+     * @return Returns a Promise
+     */
+    Calendar.findEvent = function (title, location, notes, startDate, endDate) { return; };
+    /**
+     * Find an event with additional options.
+     *
+     * @param {string} [title]  The event title
+     * @param {string} [location]  The event location
+     * @param {string} [notes]  The event notes
+     * @param {Date} [startDate]  The event start date
+     * @param {Date} [endDate]  The event end date
+     * @param {CalendarOptions} [options]  Additional options, see `getCalendarOptions`
+     * @return Returns a Promise that resolves with the event, or rejects with an error.
+     */
+    Calendar.findEventWithOptions = function (title, location, notes, startDate, endDate, options) { return; };
+    /**
+     * Find a list of events within the specified date range. (Android only)
+     *
+     * @param {Date} [startDate]  The start date
+     * @param {Date} [endDate]  The end date
+     * @return Returns a Promise that resolves with the list of events, or rejects with an error.
+     */
+    Calendar.listEventsInRange = function (startDate, endDate) { return; };
+    /**
+     * Get a list of all calendars.
+     * @return A Promise that resolves with the list of calendars, or rejects with an error.
+     */
+    Calendar.listCalendars = function () { return; };
+    /**
+     * Get a list of all future events in the specified calendar. (iOS only)
+     * @return Returns a Promise that resolves with the list of events, or rejects with an error.
+     */
+    Calendar.findAllEventsInNamedCalendar = function (calendarName) { return; };
+    /**
+     * Modify an event. (iOS only)
+     *
+     * @param {string} [title]  The event title
+     * @param {string} [location]  The event location
+     * @param {string} [notes]  The event notes
+     * @param {Date} [startDate]  The event start date
+     * @param {Date} [endDate]  The event end date
+     * @param {string} [newTitle]  The new event title
+     * @param {string} [newLocation]  The new event location
+     * @param {string} [newNotes]  The new event notes
+     * @param {Date} [newStartDate]  The new event start date
+     * @param {Date} [newEndDate]  The new event end date
+     * @return Returns a Promise
+     */
+    Calendar.modifyEvent = function (title, location, notes, startDate, endDate, newTitle, newLocation, newNotes, newStartDate, newEndDate) { return; };
+    /**
+     * Modify an event with additional options. (iOS only)
+     *
+     * @param {string} [title]  The event title
+     * @param {string} [location]  The event location
+     * @param {string} [notes]  The event notes
+     * @param {Date} [startDate]  The event start date
+     * @param {Date} [endDate]  The event end date
+     * @param {string} [newTitle]  The new event title
+     * @param {string} [newLocation]  The new event location
+     * @param {string} [newNotes]  The new event notes
+     * @param {Date} [newStartDate]  The new event start date
+     * @param {Date} [newEndDate]  The new event end date
+     * @param {CalendarOptions} [options]  Additional options, see `getCalendarOptions`
+     * @return Returns a Promise
+     */
+    Calendar.modifyEventWithOptions = function (title, location, notes, startDate, endDate, newTitle, newLocation, newNotes, newStartDate, newEndDate, options) { return; };
+    /**
+     * Delete an event.
+     *
+     * @param {string} [title]  The event title
+     * @param {string} [location]  The event location
+     * @param {string} [notes]  The event notes
+     * @param {Date} [startDate]  The event start date
+     * @param {Date} [endDate]  The event end date
+     * @return Returns a Promise
+     */
+    Calendar.deleteEvent = function (title, location, notes, startDate, endDate) { return; };
+    /**
+     * Delete an event from the specified Calendar. (iOS only)
+     *
+     * @param {string} [title]  The event title
+     * @param {string} [location]  The event location
+     * @param {string} [notes]  The event notes
+     * @param {Date} [startDate]  The event start date
+     * @param {Date} [endDate]  The event end date
+     * @param {string} calendarName
+     * @return Returns a Promise
+     */
+    Calendar.deleteEventFromNamedCalendar = function (title, location, notes, startDate, endDate, calendarName) { return; };
+    /**
+     * Open the calendar at the specified date.
+     * @return {Date} date
+     */
+    Calendar.openCalendar = function (date) { return; };
+    __decorate([
+        plugin_1.Cordova()
+    ], Calendar, "createCalendar", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Calendar, "deleteCalendar", null);
+    __decorate([
+        plugin_1.Cordova({
+            sync: true
+        })
+    ], Calendar, "getCalendarOptions", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Calendar, "createEvent", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Calendar, "createEventWithOptions", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Calendar, "createEventInteractively", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Calendar, "createEventInteractivelyWithOptions", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Calendar, "findEvent", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Calendar, "findEventWithOptions", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Calendar, "listEventsInRange", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Calendar, "listCalendars", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Calendar, "findAllEventsInNamedCalendar", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Calendar, "modifyEvent", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Calendar, "modifyEventWithOptions", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Calendar, "deleteEvent", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Calendar, "deleteEventFromNamedCalendar", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Calendar, "openCalendar", null);
+    Calendar = __decorate([
+        plugin_1.Plugin({
+            plugin: 'cordova-plugin-calendar',
+            pluginRef: 'plugins.calendar',
+            repo: 'https://github.com/EddyVerbruggen/Calendar-PhoneGap-Plugin',
+            platforms: ['Android', 'iOS']
+        })
+    ], Calendar);
+    return Calendar;
+})();
+exports.Calendar = Calendar;
+
+},{"./plugin":399}],377:[function(require,module,exports){
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var plugin_1 = require('./plugin');
+/**
+ * @name Camera
+ * @description
+ * Take a photo or capture video.
+ *
+ * Requires {@link module:driftyco/ionic-native} and the Cordova plugin: `cordova-plugin-camera`. For more info, please see the [Cordova Camera Plugin Docs](https://github.com/apache/cordova-plugin-camera).
+ *
+ * @usage
+ * ```js
+ * import {Camera} from 'ionic-native';
+ *
+ * Camera.getPicture(options).then((imageData) => {
+ *  // imageData is either a base64 encoded string or a file URI
+ *  // If it's base64:
+ *  let base64Image = "data:image/jpeg;base64," + imageData;
+ * }, (err) => {
+ * });
+ * ```
+ */
+var Camera = (function () {
+    function Camera() {
+    }
+    /**
+     * Take a picture or video, or load one from the library.
+     * @param {CameraOptions} options
+     * @return Returns a Promise that resolves with Base64 encoding of the image data, or the image file URI, depending on cameraOptions, otherwise rejects with an error.
+     */
+    Camera.getPicture = function (options) { return; };
+    /**
+     * Remove intermediate image files that are kept in temporary storage after calling camera.getPicture.
+     * Applies only when the value of Camera.sourceType equals Camera.PictureSourceType.CAMERA and the Camera.destinationType equals Camera.DestinationType.FILE_URI.
+     * @return Returns a Promise
+     */
+    Camera.cleanup = function () { };
+    ;
+    __decorate([
+        plugin_1.Cordova({
+            callbackOrder: 'reverse'
+        })
+    ], Camera, "getPicture", null);
+    __decorate([
+        plugin_1.Cordova({
+            platforms: ['iOS']
+        })
+    ], Camera, "cleanup", null);
+    Camera = __decorate([
+        plugin_1.Plugin({
+            plugin: 'cordova-plugin-camera',
+            pluginRef: 'navigator.camera',
+            repo: 'https://github.com/apache/cordova-plugin-camera',
+            platforms: ['Android', 'BlackBerry', 'Browser', 'Firefox', 'FireOS', 'iOS', 'Windows', 'Windows Phone 8', 'Ubuntu']
+        })
+    ], Camera);
+    return Camera;
+})();
+exports.Camera = Camera;
+
+},{"./plugin":399}],378:[function(require,module,exports){
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var plugin_1 = require('./plugin');
+/**
+ * @name Clipboard
+ * @description
+ * Clipboard management plugin for Cordova that supports iOS, Android, and Windows Phone 8.
+ *
+ * Requires Cordova plugin: https://github.com/VersoSolutions/CordovaClipboard
+ * For more info, please see the [Clipboard plugin docs](https://github.com/VersoSolutions/CordovaClipboard.git).
+ *
+ * @usage
+ * ```js
+ * import {Clipboard} from 'ionic-native';
+ *
+ *
+ *
+ * Clipboard.copy("Hello world");
+ *
+ * Clipboard.paste().then(
+ *    (resolve : string) => {
+  *     alert(resolve);
+*     },
+ *     (reject : string) => {
+ *     alert("Error: " + reject);
+ *     }
+*     );
+ * );
+ * ```
+ */
+var Clipboard = (function () {
+    function Clipboard() {
+    }
+    /**
+     * Copies the given text
+     * @param text
+     * @returns {Promise<T>}
+     */
+    Clipboard.copy = function (text) { return; };
+    /**
+     * Pastes the text stored in clipboard
+     * @returns {Promise<T>}
+     */
+    Clipboard.paste = function () { return; };
+    __decorate([
+        plugin_1.Cordova()
+    ], Clipboard, "copy", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Clipboard, "paste", null);
+    Clipboard = __decorate([
+        plugin_1.Plugin({
+            plugin: 'https://github.com/VersoSolutions/CordovaClipboard.git',
+            pluginRef: 'cordova.plugins.clipboard',
+            repo: 'https://github.com/VersoSolutions/CordovaClipboard',
+            platforms: ['Amazon Fire OS', 'iOS', 'Android', 'BlackBerry 10', 'Windows Phone 7', 'Windows Phone 8', 'Windows', 'Firefox OS', 'Browser']
+        })
+    ], Clipboard);
+    return Clipboard;
+})();
+exports.Clipboard = Clipboard;
+
+},{"./plugin":399}],379:[function(require,module,exports){
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var plugin_1 = require('./plugin');
+/**
+ * @name Contacts
+ * @description
+ * Access and manage Contacts on the device.
+ *
+ * Requires plugin: `cordova-plugin-contacts`
+ * For full info, please see the [Cordova Contacts plugin docs](https://github.com/apache/cordova-plugin-contacts)
+ *
+ * @usage
+ *
+ * ```js
+ * import {Contacts} from 'ionic-native';
+ *
+ *
+ *
+ * Contacts.save({
+ *   displayName: "Mr. Ionitron"
+ * }).then((contact) => {}, (err) => {})
+ * ```
+ *
+ * See the `save()` docs for a full list of fields.
+ *
+ */
+var Contacts = (function () {
+    function Contacts() {
+    }
+    /**
+     * Create a new Contact object.
+     *
+     * @param options {Object} Object whose properties the created Contact should have.
+     * @return {Contact} Returns the created contact
+     */
+    Contacts.create = function (options) {
+        return new Contact();
+    };
+    ;
+    /**
+     * Search for contacts in the Contacts list.
+     *
+     * Example: Contacts.find(['*'], { filter: 'Max' }) // will search for a displayName of 'Max'
+     *
+     * @param fields {string[]}  Contact fields to be used as a search qualifier.
+     *  A zero-length contactFields parameter is invalid and results in ContactError.INVALID_ARGUMENT_ERROR.
+     *  A contactFields value of "*" searches all contact fields.
+     *
+     * @param options {Object} the options to query with:
+     *   filter: The search string used to find navigator.contacts. (string) (Default: "")
+     *   multiple: Determines if the find operation returns multiple navigator.contacts. (Boolean) (Default: false)
+     *   desiredFields: Contact fields to be returned back. If specified, the resulting Contact object only features values for these fields. (DOMString[]) [Optional]
+     *   hasPhoneNumber(Android only): Filters the search to only return contacts with a phone number informed. (Boolean) (Default: false)
+     *
+     * @return Returns a Promise that resolves with the search results (an array of Contact objects)
+     */
+    Contacts.find = function (fields, options) { return; };
+    /**
+     * Select a single Contact.
+     * @return Returns a Promise that resolves with the selected Contact
+     */
+    Contacts.pickContact = function () { return; };
+    __decorate([
+        plugin_1.Cordova({
+            sync: true
+        })
+    ], Contacts, "create", null);
+    __decorate([
+        plugin_1.Cordova({
+            successIndex: 1,
+            errorIndex: 2
+        })
+    ], Contacts, "find", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Contacts, "pickContact", null);
+    Contacts = __decorate([
+        plugin_1.Plugin({
+            plugin: 'cordova-plugin-contacts',
+            pluginRef: 'navigator.contacts',
+            repo: 'https://github.com/apache/cordova-plugin-contacts'
+        })
+    ], Contacts);
+    return Contacts;
+})();
+exports.Contacts = Contacts;
+
+},{"./plugin":399}],380:[function(require,module,exports){
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var plugin_1 = require('./plugin');
+/**
+ * @name Date Picker
+ * @description
+ * The DatePicker plugin allows the user to fetch date or time using native dialogs.
+ *
+ * Platforms supported: iOS, Android, Windows
+ *
+ * Requires Cordova plugin: `cordova-plugin-datepicker`. For more info, please see the [DatePicker plugin docs](https://github.com/VitaliiBlagodir/cordova-plugin-datepicker).
+ *
+ * @usage
+ * ```js
+ * import {DatePicker} from 'ionic-native';
+ *
+ *
+ *
+ * DatePicker.show({
+ *   date: new Date(),
+ *   mode: 'date'
+ * }).then(
+ *   date => console.log("Got date: ", date),
+ *   err => console.log("Error occurred while getting date:", err)
+ * );
+ * ```
+ *
+ */
+var DatePicker = (function () {
+    function DatePicker() {
+    }
+    /**
+     * Shows the date and/or time picker dialog(s)
+     * @param options
+     * @returns {Promise<Date>} Returns a promise that resolves with the picked date and/or time, or rejects with an error.
+     */
+    DatePicker.show = function (options) { return; };
+    __decorate([
+        plugin_1.Cordova()
+    ], DatePicker, "show", null);
+    DatePicker = __decorate([
+        plugin_1.Plugin({
+            plugin: 'cordova-plugin-datepicker',
+            pluginRef: 'datePicker',
+            repo: 'https://github.com/VitaliiBlagodir/cordova-plugin-datepicker'
+        })
+    ], DatePicker);
+    return DatePicker;
+})();
+exports.DatePicker = DatePicker;
+
+},{"./plugin":399}],381:[function(require,module,exports){
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var plugin_1 = require('./plugin');
+/**
+ * @name DB Meter
+ * @description This plugin defines a global DBMeter object, which permits to get the decibel values from the microphone.
+ * @usage
+ * ```ts
+ * import {DBMeter} from 'ionic-native';
+ *
+ *
+ *
+ * // Start listening
+ * let subscription = DBMeter.start().subscribe(
+ *   data => console.log(data)
+ * );
+ *
+ * // Check if we are listening
+ * DBMeter.isListening().then(
+ *   (isListening : boolean) => console.log(isListening)
+ * );
+ *
+ * // Stop listening
+ * subscription.unsubscribe();
+ *
+ * // Delete DBMeter instance from memory
+ * DBMeter.delete().then(
+ *   () => console.log("Deleted DB Meter instance"),
+ *   error => console.log("Error occurred while deleting DB Meter instance")
+ * );
+ * ```
+ */
+var DBMeter = (function () {
+    function DBMeter() {
+    }
+    /**
+     * Starts listening
+     * @return {Observable<string>} Returns an observable. Subscribe to start listening. Unsubscribe to stop listening.
+     */
+    DBMeter.start = function () { return; };
+    /**
+     * Stops listening
+     * @private
+     */
+    DBMeter.stop = function () { return; };
+    /**
+     * Check if the DB Meter is listening
+     * @return {Promise<boolean>} Returns a promise that resolves with a boolean that tells us whether the DB meter is listening
+     */
+    DBMeter.isListening = function () { return; };
+    /**
+     * Delete the DB Meter instance
+     * @return {Promise<any>} Returns a promise that will resolve if the instance has been deleted, and rejects if errors occur.
+     */
+    DBMeter.delete = function () { return; };
+    __decorate([
+        plugin_1.Cordova({
+            observable: true,
+            clearFunction: 'stop'
+        })
+    ], DBMeter, "start", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], DBMeter, "stop", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], DBMeter, "isListening", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], DBMeter, "delete", null);
+    DBMeter = __decorate([
+        plugin_1.Plugin({
+            plugin: 'cordova-plugin-dbmeter',
+            pluginRef: 'DBMeter',
+            repo: 'https://github.com/akofman/cordova-plugin-dbmeter',
+            platforms: ['iOS', 'Android']
+        })
+    ], DBMeter);
+    return DBMeter;
+})();
+exports.DBMeter = DBMeter;
+
+},{"./plugin":399}],382:[function(require,module,exports){
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var plugin_1 = require('./plugin');
+/**
+ * @name Device
+ * @description
+ * Access information about the underlying device and platform.
+ *
+ * @usage
+ * ```js
+ * import {Device} from 'ionic-native';
+ *
+ *
+ *
+ * console.log('Device UUID is: ' + Device.device.uuid);
+ * ```
+ */
+var Device = (function () {
+    function Device() {
+    }
+    Object.defineProperty(Device, "device", {
+        /**
+         * Returns the whole device object.
+         *
+         * @returns {Object} The device object.
+         */
+        get: function () { return window.device; },
+        enumerable: true,
+        configurable: true
+    });
+    __decorate([
+        plugin_1.CordovaProperty
+    ], Device, "device", null);
+    Device = __decorate([
+        plugin_1.Plugin({
+            plugin: 'cordova-plugin-device',
+            pluginRef: 'device',
+            repo: 'https://github.com/apache/cordova-plugin-device'
+        })
+    ], Device);
+    return Device;
+})();
+exports.Device = Device;
+
+},{"./plugin":399}],383:[function(require,module,exports){
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var plugin_1 = require('./plugin');
+/**
+ * @name Device Motion
+ * @description
+ * Requires Cordova plugin: `cordova-plugin-device-motion`. For more info, please see the [Device Motion docs](https://github.com/apache/cordova-plugin-device-motion).
+ *
+ * @usage
+ * ```ts
+ * import {DeviceMotion} from 'ionic-native';
+ *
+ *
+ *
+ * // Get the device current acceleration
+ * DeviceMotion.getCurrentAcceleration().then(
+ *   acceleration => console.log(acceleration),
+ *   error => console.log(error)
+ * );
+ *
+ * // Watch device acceleration
+ * var subscription = DeviceMotion.watchPosition().subscribe(acceleration => {
+ *   console.log(acceleration);
+ * });
+ *
+ * // Stop watch
+ * subscription.unsubscribe();
+ *
+ * ```
+ */
+var DeviceMotion = (function () {
+    function DeviceMotion() {
+    }
+    /**
+     * Get the current acceleration along the x, y, and z axes.
+     *
+     * @returns {Promise<any>} Returns object with x, y, z, and timestamp properties
+     */
+    DeviceMotion.getCurrentAcceleration = function () { return; };
+    /**
+     * Watch the device acceleration. Clear the watch by unsubscribing from the observable.
+     *
+     * ```ts
+     * // Watch device acceleration
+     * var subscription = DeviceMotion.watchPosition().subscribe(acceleration => {
+     *   console.log(acceleration);
+     * });
+     *
+     * // Stop watch
+     * subscription.unsubscribe();
+     * ```
+     * @param options
+     * @returns {Observable<accelerationData>}
+     */
+    DeviceMotion.watchAcceleration = function (options) { return; };
+    __decorate([
+        plugin_1.Cordova()
+    ], DeviceMotion, "getCurrentAcceleration", null);
+    __decorate([
+        plugin_1.Cordova({
+            callbackOrder: 'reverse',
+            observable: true,
+            clearFunction: 'clearWatch'
+        })
+    ], DeviceMotion, "watchAcceleration", null);
+    DeviceMotion = __decorate([
+        plugin_1.Plugin({
+            plugin: 'cordova-plugin-device-motion',
+            pluginRef: 'navigator.accelerometer',
+            repo: 'https://github.com/apache/cordova-plugin-device-motion'
+        })
+    ], DeviceMotion);
+    return DeviceMotion;
+})();
+exports.DeviceMotion = DeviceMotion;
+
+},{"./plugin":399}],384:[function(require,module,exports){
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var plugin_1 = require('./plugin');
+/**
+ * @name Device Orientation
+ * @description
+ * Requires Cordova plugin: `cordova-plugin-device-orientation`. For more info, please see the [Device Orientation docs](https://github.com/apache/cordova-plugin-device-orientation).
+ *
+ * @usage
+ * ```ts
+ * import {DeviceOrientation} from 'ionic-native';
+ *
+ *
+ *
+ * // Get the device current compass heading
+ * DeviceOrientation.getCurrentHeading().then(
+ *   data => console.log(data),
+ *   error => console.log(error)
+ * );
+ *
+ * // Watch the device compass heading change
+ * var subscription = DeviceOrientation.watchHeading().subscribe(
+ *   data => console.log(data)
+ * );
+ *
+ * // Stop watching heading change
+ * subscription.unsubscribe();
+ * ```
+ */
+var DeviceOrientation = (function () {
+    function DeviceOrientation() {
+    }
+    /**
+     * Get the current compass heading.
+     * @returns {Promise<CompassHeading>}
+     */
+    DeviceOrientation.getCurrentHeading = function () { return; };
+    /**
+     * Get the device current heading at a regular interval
+     *
+     * Stop the watch by unsubscribing from the observable
+     * @param options
+     * @returns {Observable<CompassHeading>}
+     */
+    DeviceOrientation.watchHeading = function (options) { return; };
+    __decorate([
+        plugin_1.Cordova()
+    ], DeviceOrientation, "getCurrentHeading", null);
+    __decorate([
+        plugin_1.Cordova({
+            callbackOrder: 'reverse',
+            observable: true,
+            cancelFunction: 'clearWatch'
+        })
+    ], DeviceOrientation, "watchHeading", null);
+    DeviceOrientation = __decorate([
+        plugin_1.Plugin({
+            plugin: 'cordova-plugin-device-orientation',
+            pluginRef: 'navigator.compass',
+            repo: 'https://github.com/apache/cordova-plugin-device-orientation'
+        })
+    ], DeviceOrientation);
+    return DeviceOrientation;
+})();
+exports.DeviceOrientation = DeviceOrientation;
+
+},{"./plugin":399}],385:[function(require,module,exports){
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var plugin_1 = require('./plugin');
+var Diagnostic = (function () {
+    function Diagnostic() {
+    }
+    /**
+    * Checks if app is able to access device location.
+    */
+    Diagnostic.isLocationEnabled = function () {
+        // This Promise is replaced by one from the @Cordova decorator that wraps
+        // the plugin's callbacks. We provide a dummy one here so TypeScript
+        // knows that the correct return type is Promise, because there's no way
+        // for it to know the return type from a decorator.
+        // See https://github.com/Microsoft/TypeScript/issues/4881
+        return new Promise(function (res, rej) { });
+    };
+    /**
+    * Checks if Wifi is connected/enabled. On iOS this returns true if the device is connected to a network by WiFi. On Android and Windows 10 Mobile this returns true if the WiFi setting is set to enabled.
+    * On Android this requires permission <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    */
+    Diagnostic.isWifiEnabled = function () {
+        // This Promise is replaced by one from the @Cordova decorator that wraps
+        // the plugin's callbacks. We provide a dummy one here so TypeScript
+        // knows that the correct return type is Promise, because there's no way
+        // for it to know the return type from a decorator.
+        // See https://github.com/Microsoft/TypeScript/issues/4881
+        return new Promise(function (res, rej) { });
+    };
+    /*
+    * Checks if the device has a camera. On Android this returns true if the device has a camera. On iOS this returns true if both the device has a camera AND the application is authorized to use it. On Windows 10 Mobile this returns true if both the device has a rear-facing camera AND the
+    * application is authorized to use it.
+    */
+    Diagnostic.isCameraEnabled = function () {
+        // This Promise is replaced by one from the @Cordova decorator that wraps
+        // the plugin's callbacks. We provide a dummy one here so TypeScript
+        // knows that the correct return type is Promise, because there's no way
+        // for it to know the return type from a decorator.
+        // See https://github.com/Microsoft/TypeScript/issues/4881
+        return new Promise(function (res, rej) { });
+    };
+    /*
+    * Checks if the device has Bluetooth capabilities and if so that Bluetooth is switched on (same on Android, iOS and Windows 10 Mobile)
+    * On Android this requires permission <uses-permission android:name="android.permission.BLUETOOTH" />
+    */
+    Diagnostic.isBluetoothEnabled = function () {
+        // This Promise is replaced by one from the @Cordova decorator that wraps
+        // the plugin's callbacks. We provide a dummy one here so TypeScript
+        // knows that the correct return type is Promise, because there's no way
+        // for it to know the return type from a decorator.
+        // See https://github.com/Microsoft/TypeScript/issues/4881
+        return new Promise(function (res, rej) { });
+    };
+    /*
+    * Returns the location authorization status for the application.
+    * Note for Android: this is intended for Android 6 / API 23 and above. Calling on Android 5 / API 22 and below will always return GRANTED status as permissions are already granted at installation time.
+    *
+    * mode - (iOS-only / optional) location authorization mode: "always" or "when_in_use". If not specified, defaults to "when_in_use".
+    */
+    Diagnostic.requestLocationAuthorization = function (mode) {
+        // This Promise is replaced by one from the @Cordova decorator that wraps
+        // the plugin's callbacks. We provide a dummy one here so TypeScript
+        // knows that the correct return type is Promise, because there's no way
+        // for it to know the return type from a decorator.
+        // See https://github.com/Microsoft/TypeScript/issues/4881
+        return new Promise(function (res, rej) { });
+    };
+    /*
+    * Checks if the application is authorized to use location.
+    * Note for Android: this is intended for Android 6 / API 23 and above. Calling on Android 5 / API 22 and below will always return GRANTED status as permissions are already granted at installation time.
+    */
+    Diagnostic.isLocationAuthorized = function () {
+        // This Promise is replaced by one from the @Cordova decorator that wraps
+        // the plugin's callbacks. We provide a dummy one here so TypeScript
+        // knows that the correct return type is Promise, because there's no way
+        // for it to know the return type from a decorator.
+        // See https://github.com/Microsoft/TypeScript/issues/4881
+        return new Promise(function (res, rej) { });
+    };
+    /*
+    * Checks if camera hardware is present on device.
+    */
+    Diagnostic.isCameraPresent = function () {
+        // This Promise is replaced by one from the @Cordova decorator that wraps
+        // the plugin's callbacks. We provide a dummy one here so TypeScript
+        // knows that the correct return type is Promise, because there's no way
+        // for it to know the return type from a decorator.
+        // See https://github.com/Microsoft/TypeScript/issues/4881
+        return new Promise(function (res, rej) { });
+    };
+    /*
+    * Checks if the application is authorized to use the camera.
+    * Note for Android: this is intended for Android 6 / API 23 and above. Calling on Android 5 / API 22 and below will always return TRUE as permissions are already granted at installation time.
+    */
+    Diagnostic.isCameraAuthorized = function () {
+        // This Promise is replaced by one from the @Cordova decorator that wraps
+        // the plugin's callbacks. We provide a dummy one here so TypeScript
+        // knows that the correct return type is Promise, because there's no way
+        // for it to know the return type from a decorator.
+        // See https://github.com/Microsoft/TypeScript/issues/4881
+        return new Promise(function (res, rej) { });
+    };
+    /*
+    * Checks if location mode is set to return high-accuracy locations from GPS hardware.
+    *   Returns true if Location mode is enabled and is set to either:
+    *   - Device only = GPS hardware only (high accuracy)
+    *   - High accuracy = GPS hardware, network triangulation and Wifi network IDs (high and low accuracy)
+    */
+    Diagnostic.isGpsLocationEnabled = function () {
+        // This Promise is replaced by one from the @Cordova decorator that wraps
+        // the plugin's callbacks. We provide a dummy one here so TypeScript
+        // knows that the correct return type is Promise, because there's no way
+        // for it to know the return type from a decorator.
+        // See https://github.com/Microsoft/TypeScript/issues/4881
+        return new Promise(function (res, rej) { });
+    };
+    /*
+    * Checks if location mode is set to return low-accuracy locations from network triangulation/WiFi access points.
+    * Returns true if Location mode is enabled and is set to either:
+    *   - Battery saving = network triangulation and Wifi network IDs (low accuracy)
+    *   - High accuracy = GPS hardware, network triangulation and Wifi network IDs (high and low accuracy)
+    */
+    Diagnostic.isNetworkLocationEnabled = function () {
+        // This Promise is replaced by one from the @Cordova decorator that wraps
+        // the plugin's callbacks. We provide a dummy one here so TypeScript
+        // knows that the correct return type is Promise, because there's no way
+        // for it to know the return type from a decorator.
+        // See https://github.com/Microsoft/TypeScript/issues/4881
+        return new Promise(function (res, rej) { });
+    };
+    /**
+    *
+    * Checks if remote (push) notifications are enabled.
+    * On iOS 8+, returns true if app is registered for remote notifications AND "Allow Notifications" switch is ON AND alert style is not set to "None" (i.e. "Banners" or "Alerts").
+    * On iOS <=7, returns true if app is registered for remote notifications AND alert style is not set to "None" (i.e. "Banners" or "Alerts") - same as isRegisteredForRemoteNotifications().
+    */
+    Diagnostic.isRemoteNotificationsEnabled = function () {
+        // This Promise is replaced by one from the @Cordova decorator that wraps
+        // the plugin's callbacks. We provide a dummy one here so TypeScript
+        // knows that the correct return type is Promise, because there's no way
+        // for it to know the return type from a decorator.
+        // See https://github.com/Microsoft/TypeScript/issues/4881
+        return new Promise(function (res, rej) { });
+    };
+    /**
+    *
+    * Indicates if the app is registered for remote (push) notifications on the device.
+    * On iOS 8+, returns true if the app is registered for remote notifications and received its device token, or false if registration has not occurred, has failed, or has been denied by the user. Note that user preferences for notifications in the Settings app will not affect this.
+    * On iOS <=7, returns true if app is registered for remote notifications AND alert style is not set to "None" (i.e. "Banners" or "Alerts") - same as isRemoteNotificationsEnabled().
+    */
+    Diagnostic.isRegisteredForRemoteNotifications = function () {
+        // This Promise is replaced by one from the @Cordova decorator that wraps
+        // the plugin's callbacks. We provide a dummy one here so TypeScript
+        // knows that the correct return type is Promise, because there's no way
+        // for it to know the return type from a decorator.
+        // See https://github.com/Microsoft/TypeScript/issues/4881
+        return new Promise(function (res, rej) { });
+    };
+    __decorate([
+        plugin_1.Cordova()
+    ], Diagnostic, "isLocationEnabled", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Diagnostic, "isWifiEnabled", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Diagnostic, "isCameraEnabled", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Diagnostic, "isBluetoothEnabled", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Diagnostic, "requestLocationAuthorization", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Diagnostic, "isLocationAuthorized", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Diagnostic, "isCameraPresent", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Diagnostic, "isCameraAuthorized", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Diagnostic, "isGpsLocationEnabled", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Diagnostic, "isNetworkLocationEnabled", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Diagnostic, "isRemoteNotificationsEnabled", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Diagnostic, "isRegisteredForRemoteNotifications", null);
+    Diagnostic = __decorate([
+        plugin_1.Plugin({
+            plugin: 'cordova.plugins.diagnostic',
+            pluginRef: 'cordova.plugins.diagnostic'
+        })
+    ], Diagnostic);
+    return Diagnostic;
+})();
+exports.Diagnostic = Diagnostic;
+
+},{"./plugin":399}],386:[function(require,module,exports){
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var plugin_1 = require('./plugin');
+/**
+ * @name Dialogs
+ * @description
+ * This plugin gives you ability to access and customize the device native dialogs.
+ *
+ * Requires Cordova plugin: `cordova-plugin-dialogs`. For more info, please see the [Dialogs plugin docs](https://github.com/apache/cordova-plugin-dialogs).
+ *
+ * @usage
+ * ```js
+ * import {Dialogs} from 'ionic-native';
+ *
+ *
+ *
+ *
+ * ```
+ */
+var Dialogs = (function () {
+    function Dialogs() {
+    }
+    /**
+     * Shows a custom alert or dialog box.
+     * @param message Dialog message. (String)
+     * @param title Dialog title. (String) (Optional, defaults to Alert)
+     * @param buttonName Button name. (String) (Optional, defaults to OK)
+     * @returns {Promise<any>} Returns a blank promise once the user has dismissed the alert.
+     */
+    Dialogs.alert = function (message, title, buttonName) {
+        if (title === void 0) { title = 'Alert'; }
+        if (buttonName === void 0) { buttonName = 'OK'; }
+        return;
+    };
+    /**
+     * Displays a customizable confirmation dialog box.
+     * @param message Dialog message. (String)
+     * @param title Dialog title. (String) (Optional, defaults to Confirm)
+     * @param buttonLabels Array of strings specifying button labels. (Array) (Optional, defaults to [OK,Cancel])
+     * @returns {Promise<number>} Returns a promise that resolves the button index that was clicked. Note that the index use one-based indexing.
+     */
+    Dialogs.confirm = function (message, title, buttonLabels) {
+        if (title === void 0) { title = 'Confirm'; }
+        if (buttonLabels === void 0) { buttonLabels = ['OK', 'Cancel']; }
+        return;
+    };
+    /**
+     * Displays a native dialog box that is more customizable than the browser's prompt function.
+     * @param message Dialog message. (String)
+     * @param title Dialog title (String) (Optional, defaults to Prompt)
+     * @param buttonLabels  Array of strings specifying button labels (Array) (Optional, defaults to ["OK","Cancel"])
+     * @param defaultText Default textbox input value (String) (Optional, Default: empty string)
+     * @returns {Promise<any>} Returns a promise that resolves an object with the button index clicked and the text entered
+     */
+    Dialogs.prompt = function (message, title, buttonLabels, defaultText) {
+        if (title === void 0) { title = 'Prompt'; }
+        if (buttonLabels === void 0) { buttonLabels = ['OK', 'Cancel']; }
+        if (defaultText === void 0) { defaultText = ''; }
+        return;
+    };
+    /**
+     * The device plays a beep sound.
+     * @param times The number of times to repeat the beep. (Number)
+     */
+    Dialogs.beep = function (times) { };
+    __decorate([
+        plugin_1.Cordova({
+            successIndex: 1,
+            errorIndex: 4
+        })
+    ], Dialogs, "alert", null);
+    __decorate([
+        plugin_1.Cordova({
+            successIndex: 1,
+            errorIndex: 4
+        })
+    ], Dialogs, "confirm", null);
+    __decorate([
+        plugin_1.Cordova({
+            successIndex: 1,
+            errorIndex: 5
+        })
+    ], Dialogs, "prompt", null);
+    __decorate([
+        plugin_1.Cordova({
+            sync: true
+        })
+    ], Dialogs, "beep", null);
+    Dialogs = __decorate([
+        plugin_1.Plugin({
+            plugin: 'cordova-plugin-dialogs',
+            pluginRef: 'navigator.notification',
+            repo: 'https://github.com/apache/cordova-plugin-dialogs.git'
+        })
+    ], Dialogs);
+    return Dialogs;
+})();
+exports.Dialogs = Dialogs;
+
+},{"./plugin":399}],387:[function(require,module,exports){
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var plugin_1 = require('./plugin');
+/**
+ * @name Facebook
+ * @description
+ * Use the Facebook Connect plugin to obtain access to the native FB application on iOS and Android.
+ *
+ * Requires Cordova plugin: `cordova-plugin-facebook4`. For more info, please see the [Facebook Connect](https://github.com/jeduan/cordova-plugin-facebook4).
+ *
+ * #### Installation
+ *
+ *  To use the FB plugin, you first have to create a new Facebook App inside of the Facebook developer portal at [https://developers.facebook.com/apps](https://developers.facebook.com/apps).
+ *
+ * [![fb-getstarted-1](/img/docs/native/Facebook/1.png)](https://developers.facebook.com/apps/)
+ *
+ * Retrieve the `App ID` and `App Name`.
+ *
+ * [![fb-getstarted-2](/img/docs/native/Facebook/2.png)](https://developers.facebook.com/apps/)
+ *
+ * Then type in the following command in your Terminal, where APP_ID and APP_NAME are the values from the Facebook Developer portal.
+ *
+ * ```bash
+ *  cordova plugin add cordova-plugin-facebook4 --save --variable APP_ID="123456789" --variable APP_NAME="myApplication"
+ * ```
+ *
+ * After, you'll need to add the native platforms you'll be using to your app in the Facebook Developer portal under your app's Settings:
+ *
+ * [![fb-getstarted-3](/img/docs/native/Facebook/3.png)](https://developers.facebook.com/apps/)
+ *
+ * Click `'Add Platform'`.
+ *
+ * [![fb-getstarted-4](/img/docs/native/Facebook/4.png)](https://developers.facebook.com/apps/)
+ *
+ * At this point you'll need to open your project's [`config.xml`](https://cordova.apache.org/docs/en/latest/config_ref/index.html) file, found in the root directory of your project.
+ *
+ * Take note of the `id` for the next step:
+ * ```
+ * <widget id="com.mycompany.testapp" version="0.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+ * ```
+ *
+ * You can also edit the `id` to whatever you'd like it to be.
+ *
+ * #### iOS Install
+ * Under 'Bundle ID', add the `id` from your `config.xml` file:
+ *
+ * [![fb-getstarted-5](/img/docs/native/Facebook/5.png)](https://developers.facebook.com/apps/)
+ *
+ *
+ * #### Android Install
+ * Under 'Google Play Package Name', add the `id` from your `config.xml` file:
+ *
+ * [![fb-getstarted-6](/img/docs/native/Facebook/6.png)](https://developers.facebook.com/apps/)
+ *
+ *
+ * And that's it! You can now make calls to Facebook using the plugin.
+ *
+ * ## Events
+ *
+ * App events allow you to understand the makeup of users engaging with your app, measure the performance of your Facebook mobile app ads, and reach specific sets of your users with Facebook mobile app ads.
+ *
+ * - [iOS] [https://developers.facebook.com/docs/ios/app-events](https://developers.facebook.com/docs/ios/app-events)
+ * - [Android] [https://developers.facebook.com/docs/android/app-events](https://developers.facebook.com/docs/android/app-events)
+ * - [JS] Does not have an Events API, so the plugin functions are empty and will return an automatic success
+ *
+ * Activation events are automatically tracked for you in the plugin.
+ *
+ * Events are listed on the [insights page](https://www.facebook.com/insights/).
+ *
+ * For tracking events, see `logEvent` and `logPurchase`.
+ *
+ * @usage
+ * ```js
+ * import {Facebook} from 'ionic-native';
+ *
+ *
+ *
+ * ```
+ *
+ */
+var Facebook = (function () {
+    function Facebook() {
+    }
+    // @Cordova()
+    // static browserInit(appId: number){
+    //   return new Promise<any>((res, rej) => {});
+    // }
+    /**
+     * Login to Facebook to authenticate this app.
+     *
+     * ```ts
+     * {
+     *   status: "connected",
+     *   authResponse: {
+     *     session_key: true,
+     *     accessToken: "kgkh3g42kh4g23kh4g2kh34g2kg4k2h4gkh3g4k2h4gk23h4gk2h34gk234gk2h34AndSoOn",
+     *     expiresIn: 5183979,
+     *     sig: "...",
+     *     secret: "...",
+     *     userID: "634565435"
+     *   }
+     * }
+     * ```
+     *
+     * @param {string[]}  permissions List of [permissions](https://developers.facebook.com/docs/facebook-login/permissions) this app has upon logging in.
+     * @return Returns a Promise that resolves with a status object if login succeeds, and rejects if login fails.
+     */
+    Facebook.login = function (permissions) { return; };
+    /**
+     * Logout of Facebook.
+     *
+     * For more info see the [Facebook docs](https://developers.facebook.com/docs/reference/javascript/FB.logout)
+     * @return Returns a Promise that resolves on a successful logout, and rejects if logout fails.
+     */
+    Facebook.logout = function () { return; };
+    /**
+     * Determine if a user is logged in to Facebook and has authenticated your app.  There are three possible states for a user:
+     *
+     * 1) the user is logged into Facebook and has authenticated your application (connected)
+     * 2) the user is logged into Facebook but has not authenticated your application (not_authorized)
+     * 3) the user is either not logged into Facebook or explicitly logged out of your application so it doesn't attempt to connect to Facebook and thus, we don't know if they've authenticated your application or not (unknown)
+     *
+     * Resolves with a response like:
+     *
+     * ```
+     * {
+     *   authResponse: {
+     *     userID: "12345678912345",
+     *     accessToken: "kgkh3g42kh4g23kh4g2kh34g2kg4k2h4gkh3g4k2h4gk23h4gk2h34gk234gk2h34AndSoOn",
+     *     session_Key: true,
+     *     expiresIn: "5183738",
+     *     sig: "..."
+     *   },
+     *   status: "connected"
+     * }
+     * ```
+     *
+     * For more information see the [Facebook docs](https://developers.facebook.com/docs/reference/javascript/FB.getLoginStatus)
+     *
+     * @return Returns a Promise that resolves with a status, or rejects with an error
+     */
+    Facebook.getLoginStatus = function () { return; };
+    /**
+     * Get a Facebook access token for using Facebook services.
+     *
+     * @return Returns a Promise that resolves with an access token, or rejects with an error
+     */
+    Facebook.getAccessToken = function () { return; };
+    /**
+     * Show one of various Facebook dialogs. Example of options for a Share dialog:
+     *
+     * ```
+     * {
+     *   method: "share",
+     *   href: "http://example.com",
+     *   caption: "Such caption, very feed.",
+     *   description: "Much description",
+     *   picture: 'http://example.com/image.png'
+     * }
+     * ```
+     *
+     * For more options see the [Cordova plugin docs](https://github.com/jeduan/cordova-plugin-facebook4#show-a-dialog) and the [Facebook docs](https://developers.facebook.com/docs/javascript/reference/FB.ui)
+     * @options {Object}  options The dialog options
+     * @return Returns a Promise that resolves with success data, or rejects with an error
+     */
+    Facebook.showDialog = function (options) { return; };
+    /**
+     * Make a call to Facebook Graph API. Can take additional permissions beyond those granted on login.
+     *
+     * For more information see:
+     *
+     *  Calling the Graph API - https://developers.facebook.com/docs/javascript/reference/FB.api
+     *  Graph Explorer - https://developers.facebook.com/tools/explorer
+     *  Graph API - https://developers.facebook.com/docs/graph-api
+     *
+     * @param {string}  requestPath Graph API endpoint you want to call
+     * @param {string[]}  permissions List of [permissions](https://developers.facebook.com/docs/facebook-login/permissions) for this request.
+     * @return Returns a Promise that resolves with the result of the request, or rejects with an error
+     */
+    Facebook.api = function (requestPath, permissions) { return; };
+    /**
+     * Log an event.  For more information see the Events section above.
+     *
+     * @param {string}  name Name of the event
+     * @param {Object}  [params] An object containing extra data to log with the event
+     * @param {number}  [valueToSum] any value to be added to added to a sum on each event
+     * @return
+     */
+    Facebook.logEvent = function (name, params, valueToSum) { return; };
+    /**
+     * Log a purchase. For more information see the Events section above.
+     *
+     * @param {number}  value Value of the purchase.
+     * @param {string}  currency The currency, as an [ISO 4217 currency code](http://en.wikipedia.org/wiki/ISO_4217)
+     * @return Returns a Promise
+     */
+    Facebook.logPurchase = function (value, currency) { return; };
+    /**
+     * Open App Invite dialog. Does not require login.
+     *
+     * For more information see:
+     *
+     *   the App Invites Overview - https://developers.facebook.com/docs/app-invites/overview
+     *   the App Links docs - https://developers.facebook.com/docs/applinks
+     *
+     *
+     * @param {Object}  options An object containing an [App Link](https://developers.facebook.com/docs/applinks) URL to your app and an optional image URL.
+     *   url: [App Link](https://developers.facebook.com/docs/applinks) to your app
+     *   picture: image to be displayed in the App Invite dialog
+     *
+     * @return Returns a Promise that resolves with the result data, or rejects with an error
+     */
+    Facebook.appInvite = function (options) { return; };
+    __decorate([
+        plugin_1.Cordova()
+    ], Facebook, "login", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Facebook, "logout", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Facebook, "getLoginStatus", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Facebook, "getAccessToken", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Facebook, "showDialog", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Facebook, "api", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Facebook, "logEvent", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Facebook, "logPurchase", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Facebook, "appInvite", null);
+    Facebook = __decorate([
+        plugin_1.Plugin({
+            plugin: 'cordova-plugin-facebook4',
+            pluginRef: 'facebookConnectPlugin',
+            repo: 'https://github.com/jeduan/cordova-plugin-facebook4',
+            install: 'cordova plugin add cordova-plugin-facebook4 --variable APP_ID="123456789" --variable APP_NAME="myApplication"'
+        })
+    ], Facebook);
+    return Facebook;
+})();
+exports.Facebook = Facebook;
+
+},{"./plugin":399}],388:[function(require,module,exports){
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var plugin_1 = require('./plugin');
+/**
+ * @name File
+ * @description
+ * This plugin implements a File API allowing read/write access to files residing on the device.
+ *
+ *  This plugin is based on several specs, including : The HTML5 File API http://www.w3.org/TR/FileAPI/
+ *  The (now-defunct) Directories and System extensions Latest: http://www.w3.org/TR/2012/WD-file-system-api-20120417/
+ *  Although most of the plugin code was written when an earlier spec was current: http://www.w3.org/TR/2011/WD-file-system-api-20110419/
+ *  It also implements the FileWriter spec : http://dev.w3.org/2009/dap/file-system/file-writer.html
+ */
+var File = (function () {
+    function File() {
+    }
+    // @Cordova()
+    // static getFreeDiskSpace(): Promise<any> { return }
+    /**
+     * Check if a directory exists in a certain path, directory.
+     *
+     * @param {string} path Base FileSystem. Please refer to the iOS and Android filesystems above
+     * @param {string} dir Name of directory to check
+     * @return Returns a Promise that resolves or rejects with an error.
+     */
+    File.checkDir = function (path, dir) {
+        var resolveFn, rejectFn;
+        var promise = new Promise(function (resolve, reject) { resolveFn = resolve; rejectFn = reject; });
+        if ((/^\//.test(dir))) {
+            rejectFn('directory cannot start with \/');
+        }
+        try {
+            var directory = path + dir;
+            window.resolveLocalFileSystemURL(directory, function (fileSystem) {
+                if (fileSystem.isDirectory === true) {
+                    resolveFn(fileSystem);
+                }
+                else {
+                    rejectFn({ code: 13, message: 'input is not a directory' });
+                }
+            }, function (error) {
+                error.message = File.cordovaFileError[error.code];
+                rejectFn(error);
+            });
+        }
+        catch (err) {
+            err.message = File.cordovaFileError[err.code];
+            rejectFn(err);
+        }
+        return promise;
+    };
+    /**
+     * Creates a new directory in the specific path.
+     * The replace boolean value determines whether to replace an existing directory with the same name.
+     * If an existing directory exists and the replace value is false, the promise will fail and return an error.
+     *
+     * @param {string} path  Base FileSystem. Please refer to the iOS and Android filesystems above
+     * @param {string} dirName Name of directory to create
+     * @param {boolean} replace If true, replaces file with same name. If false returns error
+     * @return Returns a Promise that resolves or rejects with an error.
+     */
+    File.createDir = function (path, dirName, replace) {
+        var resolveFn, rejectFn;
+        var promise = new Promise(function (resolve, reject) { resolveFn = resolve; rejectFn = reject; });
+        if ((/^\//.test(dirName))) {
+            rejectFn('directory cannot start with \/');
+        }
+        replace = replace ? false : true;
+        var options = {
+            create: true,
+            exclusive: replace
+        };
+        try {
+            window.resolveLocalFileSystemURL(path, function (fileSystem) {
+                fileSystem.getDirectory(dirName, options, function (result) {
+                    resolveFn(result);
+                }, function (error) {
+                    error.message = File.cordovaFileError[error.code];
+                    rejectFn(error);
+                });
+            }, function (err) {
+                err.message = File.cordovaFileError[err.code];
+                rejectFn(err);
+            });
+        }
+        catch (e) {
+            e.message = File.cordovaFileError[e.code];
+            rejectFn(e);
+        }
+        return promise;
+    };
+    /**
+     * Remove a directory at a given path
+     *
+     * @param {string} path The path to the directory
+     * @param {string} dirName The directory name
+     * @return Returns a Promise that resolves or rejects with an error.
+     */
+    File.removeDir = function (path, dirName) {
+        var resolveFn, rejectFn;
+        var promise = new Promise(function (resolve, reject) { resolveFn = resolve; rejectFn = reject; });
+        if ((/^\//.test(dirName))) {
+            rejectFn('directory cannot start with \/');
+        }
+        try {
+            window.resolveLocalFileSystemURL(path, function (fileSystem) {
+                fileSystem.getDirectory(dirName, { create: false }, function (dirEntry) {
+                    dirEntry.remove(function () {
+                        resolveFn({ success: true, fileRemoved: dirEntry });
+                    }, function (error) {
+                        error.message = File.cordovaFileError[error.code];
+                        rejectFn(error);
+                    });
+                }, function (err) {
+                    err.message = File.cordovaFileError[err.code];
+                    rejectFn(err);
+                });
+            }, function (er) {
+                er.message = File.cordovaFileError[er.code];
+                rejectFn(er);
+            });
+        }
+        catch (e) {
+            e.message = File.cordovaFileError[e.code];
+            rejectFn(e);
+        }
+        return promise;
+    };
+    /**
+     * Move a directory to a given path
+     *
+     * @param {string} path The source path to the directory
+     * @param {string} dirName The source directory name
+     * @param {string} newPath The destionation path to the directory
+     * @param {string} newDirName The destination directory name
+     * @return Returns a Promise that resolves or rejects with an error.
+     */
+    File.moveDir = function (path, dirName, newPath, newDirName) {
+        var resolveFn, rejectFn;
+        var promise = new Promise(function (resolve, reject) { resolveFn = resolve; rejectFn = reject; });
+        newDirName = newDirName || dirName;
+        if ((/^\//.test(newDirName))) {
+            rejectFn('directory cannot start with \/');
+        }
+        try {
+            window.resolveLocalFileSystemURL(path, function (fileSystem) {
+                fileSystem.getDirectory(dirName, { create: false }, function (dirEntry) {
+                    window.resolveLocalFileSystemURL(newPath, function (newDirEntry) {
+                        dirEntry.moveTo(newDirEntry, newDirName, function (result) {
+                            resolveFn(result);
+                        }, function (error) {
+                            rejectFn(error);
+                        });
+                    }, function (erro) {
+                        rejectFn(erro);
+                    });
+                }, function (err) {
+                    rejectFn(err);
+                });
+            }, function (er) {
+                rejectFn(er);
+            });
+        }
+        catch (e) {
+            rejectFn(e);
+        }
+        return promise;
+    };
+    /**
+     * Copy a directory in various methods. If destination directory exists, will fail to copy.
+     *
+     * @param {string} path Base FileSystem. Please refer to the iOS and Android filesystems above
+     * @param {string} dirName Name of directory to copy
+     * @param {string} newPath Base FileSystem of new location
+     * @param {string} newDirName New name of directory to copy to (leave blank to remain the same)
+     * @return Returns a Promise that resolves or rejects with an error.
+     */
+    File.copyDir = function (path, dirName, newPath, newDirName) {
+        var resolveFn, rejectFn;
+        var promise = new Promise(function (resolve, reject) { resolveFn = resolve; rejectFn = reject; });
+        newDirName = newDirName || dirName;
+        if ((/^\//.test(newDirName))) {
+            rejectFn('directory cannot start with \/');
+        }
+        try {
+            window.resolveLocalFileSystemURL(path, function (fileSystem) {
+                fileSystem.getDirectory(dirName, { create: false, exclusive: false }, function (dirEntry) {
+                    window.resolveLocalFileSystemURL(newPath, function (newDirEntry) {
+                        dirEntry.copyTo(newDirEntry, newDirName, function (result) {
+                            resolveFn(result);
+                        }, function (error) {
+                            error.message = File.cordovaFileError[error.code];
+                            rejectFn(error);
+                        });
+                    }, function (erro) {
+                        erro.message = File.cordovaFileError[erro.code];
+                        rejectFn(erro);
+                    });
+                }, function (err) {
+                    err.message = File.cordovaFileError[err.code];
+                    rejectFn(err);
+                });
+            }, function (er) {
+                er.message = File.cordovaFileError[er.code];
+                rejectFn(er);
+            });
+        }
+        catch (e) {
+            e.message = File.cordovaFileError[e.code];
+            rejectFn(e);
+        }
+        return promise;
+    };
+    /**
+     * List files and directory from a given path
+     *
+     * @param {string} path Base FileSystem. Please refer to the iOS and Android filesystems above
+     * @param {string} dirName Name of directory
+     * @return Returns a Promise that resolves or rejects with an error.
+     */
+    File.listDir = function (path, dirName) {
+        var resolveFn, rejectFn;
+        var promise = new Promise(function (resolve, reject) { resolveFn = resolve; rejectFn = reject; });
+        if ((/^\//.test(dirName))) {
+            rejectFn('directory cannot start with \/');
+        }
+        var options = {
+            create: false,
+            exclusive: false
+        };
+        try {
+            window.resolveLocalFileSystemURL(path, function (fileSystem) {
+                fileSystem.getDirectory(dirName, options, function (parent) {
+                    var reader = parent.createReader();
+                    reader.readEntries(function (entries) {
+                        resolveFn(entries);
+                    }, function () {
+                        rejectFn('DIR_READ_ERROR : ' + path + dirName);
+                    });
+                }, function (error) {
+                    error.message = File.cordovaFileError[error.code];
+                    rejectFn(error);
+                });
+            }, function (err) {
+                err.message = File.cordovaFileError[err.code];
+                rejectFn(err);
+            });
+        }
+        catch (e) {
+            e.message = File.cordovaFileError[e.code];
+            rejectFn(e);
+        }
+        return promise;
+    };
+    /**
+     * Removes all files and the directory from a desired location.
+     *
+     * @param {string} path Base FileSystem. Please refer to the iOS and Android filesystems above
+     * @param {string} dirName Name of directory
+     * @return Returns a Promise that resolves or rejects with an error.
+     */
+    File.removeRecursively = function (path, dirName) {
+        var resolveFn, rejectFn;
+        var promise = new Promise(function (resolve, reject) { resolveFn = resolve; rejectFn = reject; });
+        if ((/^\//.test(dirName))) {
+            rejectFn('directory cannot start with \/');
+        }
+        try {
+            window.resolveLocalFileSystemURL(path, function (fileSystem) {
+                fileSystem.getDirectory(dirName, { create: false }, function (dirEntry) {
+                    dirEntry.removeRecursively(function () {
+                        resolveFn({ success: true, fileRemoved: dirEntry });
+                    }, function (error) {
+                        error.message = File.cordovaFileError[error.code];
+                        rejectFn(error);
+                    });
+                }, function (err) {
+                    err.message = File.cordovaFileError[err.code];
+                    rejectFn(err);
+                });
+            }, function (er) {
+                er.message = File.cordovaFileError[er.code];
+                rejectFn(er);
+            });
+        }
+        catch (e) {
+            e.message = File.cordovaFileError[e.code];
+            rejectFn(e);
+        }
+        return promise;
+    };
+    /**
+     * Check if a file exists in a certain path, directory.
+     *
+     * @param {string} path Base FileSystem. Please refer to the iOS and Android filesystems above
+     * @param {string} file Name of file to check
+     * @return Returns a Promise that resolves or rejects with an error.
+     */
+    File.checkFile = function (path, file) {
+        var resolveFn, rejectFn;
+        var promise = new Promise(function (resolve, reject) { resolveFn = resolve; rejectFn = reject; });
+        if ((/^\//.test(file))) {
+            rejectFn('file cannot start with \/');
+        }
+        try {
+            var directory = path + file;
+            window.resolveLocalFileSystemURL(directory, function (fileSystem) {
+                if (fileSystem.isFile === true) {
+                    resolveFn(fileSystem);
+                }
+                else {
+                    rejectFn({ code: 13, message: 'input is not a file' });
+                }
+            }, function (error) {
+                error.message = File.cordovaFileError[error.code];
+                rejectFn(error);
+            });
+        }
+        catch (err) {
+            err.message = File.cordovaFileError[err.code];
+            rejectFn(err);
+        }
+        return promise;
+    };
+    /**
+     * Creates a new file in the specific path.
+     * The replace boolean value determines whether to replace an existing file with the same name.
+     * If an existing file exists and the replace value is false, the promise will fail and return an error.
+     *
+     * @param {string} path  Base FileSystem. Please refer to the iOS and Android filesystems above
+     * @param {string} fileName Name of file to create
+     * @param {boolean} replace If true, replaces file with same name. If false returns error
+     * @return Returns a Promise that resolves or rejects with an error.
+     */
+    File.createFile = function (path, fileName, replace) {
+        var resolveFn, rejectFn;
+        var promise = new Promise(function (resolve, reject) { resolveFn = resolve; rejectFn = reject; });
+        if ((/^\//.test(fileName))) {
+            rejectFn('file-name cannot start with \/');
+        }
+        replace = replace ? false : true;
+        var options = {
+            create: true,
+            exclusive: replace
+        };
+        try {
+            window.resolveLocalFileSystemURL(path, function (fileSystem) {
+                fileSystem.getFile(fileName, options, function (result) {
+                    resolveFn(result);
+                }, function (error) {
+                    error.message = File.cordovaFileError[error.code];
+                    rejectFn(error);
+                });
+            }, function (err) {
+                err.message = File.cordovaFileError[err.code];
+                rejectFn(err);
+            });
+        }
+        catch (e) {
+            e.message = File.cordovaFileError[e.code];
+            rejectFn(e);
+        }
+        return promise;
+    };
+    /**
+     * Removes a file from a desired location.
+     *
+     * @param {string} path  Base FileSystem. Please refer to the iOS and Android filesystems above
+     * @param {string} fileName Name of file to remove
+     * @return Returns a Promise that resolves or rejects with an error.
+     */
+    File.removeFile = function (path, fileName) {
+        var resolveFn, rejectFn;
+        var promise = new Promise(function (resolve, reject) { resolveFn = resolve; rejectFn = reject; });
+        if ((/^\//.test(fileName))) {
+            rejectFn('file-name cannot start with \/');
+        }
+        try {
+            window.resolveLocalFileSystemURL(path, function (fileSystem) {
+                fileSystem.getFile(fileName, { create: false }, function (fileEntry) {
+                    fileEntry.remove(function () {
+                        resolveFn({ success: true, fileRemoved: fileEntry });
+                    }, function (error) {
+                        error.message = File.cordovaFileError[error.code];
+                        rejectFn(error);
+                    });
+                }, function (err) {
+                    err.message = File.cordovaFileError[err.code];
+                    rejectFn(err);
+                });
+            }, function (er) {
+                er.message = File.cordovaFileError[er.code];
+                rejectFn(er);
+            });
+        }
+        catch (e) {
+            e.message = File.cordovaFileError[e.code];
+            rejectFn(e);
+        }
+        return promise;
+    };
+    // static writeFile(path: string, fileName: string, text: string, replace: boolean): Promise<any> { return }
+    // static writeExistingFile(path: string, fileName: string, text: string): Promise<any> { return }
+    // static readAsText(path: string, file: string): Promise<any> { return }
+    // static readAsDataURL(path: string, file: string): Promise<any> { return }
+    // static readAsBinaryString(path: string, file: string): Promise<any> { return }
+    // static readAsArrayBuffer(path: string, file: string): Promise<any> { return }
+    /**
+     * Move a file to a given path.
+     *
+     * @param {string} path Base FileSystem. Please refer to the iOS and Android filesystems above
+     * @param {string} fileName Name of file to move
+     * @param {string} newPath Base FileSystem of new location
+     * @param {string} newFileName New name of file to move to (leave blank to remain the same)
+     * @return Returns a Promise that resolves or rejects with an error.
+     */
+    File.moveFile = function (path, fileName, newPath, newFileName) {
+        var resolveFn, rejectFn;
+        var promise = new Promise(function (resolve, reject) { resolveFn = resolve; rejectFn = reject; });
+        newFileName = newFileName || fileName;
+        if ((/^\//.test(newFileName))) {
+            rejectFn('file-name cannot start with \/');
+        }
+        try {
+            window.resolveLocalFileSystemURL(path, function (fileSystem) {
+                fileSystem.getFile(fileName, { create: false }, function (fileEntry) {
+                    window.resolveLocalFileSystemURL(newPath, function (newFileEntry) {
+                        fileEntry.moveTo(newFileEntry, newFileName, function (result) {
+                            resolveFn(result);
+                        }, function (error) {
+                            rejectFn(error);
+                        });
+                    }, function (err) {
+                        rejectFn(err);
+                    });
+                }, function (err) {
+                    rejectFn(err);
+                });
+            }, function (er) {
+                rejectFn(er);
+            });
+        }
+        catch (e) {
+            rejectFn(e);
+        }
+        return promise;
+    };
+    /**
+     * Copy a file in various methods. If file exists, will fail to copy.
+     *
+     * @param {string} path Base FileSystem. Please refer to the iOS and Android filesystems above
+     * @param {string} fileName Name of file to copy
+     * @param {string} newPath Base FileSystem of new location
+     * @param {string} newFileName New name of file to copy to (leave blank to remain the same)
+     * @return Returns a Promise that resolves or rejects with an error.
+     */
+    File.copyFile = function (path, fileName, newPath, newFileName) {
+        var resolveFn, rejectFn;
+        var promise = new Promise(function (resolve, reject) { resolveFn = resolve; rejectFn = reject; });
+        newFileName = newFileName || fileName;
+        if ((/^\//.test(newFileName))) {
+            rejectFn('file-name cannot start with \/');
+        }
+        try {
+            window.resolveLocalFileSystemURL(path, function (fileSystem) {
+                fileSystem.getFile(fileName, { create: false, exclusive: false }, function (fileEntry) {
+                    window.resolveLocalFileSystemURL(newPath, function (newFileEntry) {
+                        fileEntry.copyTo(newFileEntry, newFileName, function (result) {
+                            resolveFn(result);
+                        }, function (error) {
+                            error.message = File.cordovaFileError[error.code];
+                            rejectFn(error);
+                        });
+                    }, function (erro) {
+                        erro.message = File.cordovaFileError[erro.code];
+                        rejectFn(erro);
+                    });
+                }, function (err) {
+                    err.message = File.cordovaFileError[err.code];
+                    rejectFn(err);
+                });
+            }, function (er) {
+                er.message = File.cordovaFileError[er.code];
+                rejectFn(er);
+            });
+        }
+        catch (e) {
+            e.message = File.cordovaFileError[e.code];
+            rejectFn(e);
+        }
+        return promise;
+    };
+    File.cordovaFileError = {
+        1: 'NOT_FOUND_ERR',
+        2: 'SECURITY_ERR',
+        3: 'ABORT_ERR',
+        4: 'NOT_READABLE_ERR',
+        5: 'ENCODING_ERR',
+        6: 'NO_MODIFICATION_ALLOWED_ERR',
+        7: 'INVALID_STATE_ERR',
+        8: 'SYNTAX_ERR',
+        9: 'INVALID_MODIFICATION_ERR',
+        10: 'QUOTA_EXCEEDED_ERR',
+        11: 'TYPE_MISMATCH_ERR',
+        12: 'PATH_EXISTS_ERR'
+    };
+    File = __decorate([
+        plugin_1.Plugin({
+            plugin: 'cordova-plugin-file',
+            pluginRef: 'cordova.file',
+            repo: 'https://github.com/apache/cordova-plugin-file'
+        })
+    ], File);
+    return File;
+})();
+exports.File = File;
+
+},{"./plugin":399}],389:[function(require,module,exports){
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var plugin_1 = require('./plugin');
+/**
+ * @name Flashlight
+ * @description This plugin allows you to switch the flashlight / torch of the device on and off.
+ *
+ * Requires Cordova plugin: `cordova-plugin-flashlight`. For more info, please see the [Flashlight plugin docs](https://github.com/EddyVerbruggen/Flashlight-PhoneGap-Plugin).
+ *
+ * @usage
+ * ```js
+ * import {Flashlight} from 'ionic-native';
+ *
+ *
+ *
+ * ```
+ */
+var Flashlight = (function () {
+    function Flashlight() {
+    }
+    /**
+     * Checks if the flash light is available
+     * @returns {Promise<boolean>} Returns a promise that resolves with a boolean stating if the flash light is available.
+     */
+    Flashlight.available = function () { return; };
+    /**
+     * Switches the flashlight on
+     * @returns {Promise<boolean>}
+     */
+    Flashlight.switchOn = function () { return; };
+    /**
+     * Switches the flash light off
+     * @returns {Promise<boolean>}
+     */
+    Flashlight.switchOff = function () { return; };
+    /**
+     * Toggles the flashlight
+     * @returns {Promise<any>}
+     */
+    Flashlight.toggle = function () { return; };
+    /**
+     * Checks if the flash light is turned on.
+     * Returns a boolean
+     */
+    Flashlight.isSwitchedOn = function () { return; };
+    __decorate([
+        plugin_1.Cordova()
+    ], Flashlight, "available", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Flashlight, "switchOn", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Flashlight, "switchOff", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Flashlight, "toggle", null);
+    __decorate([
+        plugin_1.Cordova({
+            sync: true
+        })
+    ], Flashlight, "isSwitchedOn", null);
+    Flashlight = __decorate([
+        plugin_1.Plugin({
+            plugin: 'cordova-plugin-flashlight',
+            pluginRef: 'window.plugins.flashlight',
+            repo: 'https://github.com/EddyVerbruggen/Flashlight-PhoneGap-Plugin.git'
+        })
+    ], Flashlight);
+    return Flashlight;
+})();
+exports.Flashlight = Flashlight;
+
+},{"./plugin":399}],390:[function(require,module,exports){
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var plugin_1 = require('./plugin');
+/**
+ * @name Geolocation
+ * @description
+ * This plugin provides information about the device's location, such as latitude and longitude. Common sources of location information include Global Positioning System (GPS) and location inferred from network signals such as IP address, RFID, WiFi and Bluetooth MAC addresses, and GSM/CDMA cell IDs.
+ *
+ *  This API is based on the W3C Geolocation API Specification, and only executes on devices that don't already provide an implementation.
+ *
+ * @usage
+ *
+ * ```ts
+ * import {Geolocation} from 'ionic-native';
+ *
+ *
+ *
+ * Geolocation.getCurrentPosition().then((resp) => {
+ *  //resp.coords.latitude
+ *  //resp.coords.longitude
+ * })
+ *
+ * let watch = Geolocation.watchPosition();
+ * watch.subscribe((data) => {
+ *  //data.coords.latitude
+ *  //data.coords.longitude
+ * })
+ * ```
+ */
+var Geolocation = (function () {
+    function Geolocation() {
+    }
+    /**
+     * Get the device's current position.
+     *
+     * @param {GeolocationOptions} options  The [geolocation options](https://developer.mozilla.org/en-US/docs/Web/API/PositionOptions).
+     * @return Returns a Promise that resolves with the [position](https://developer.mozilla.org/en-US/docs/Web/API/Position) of the device, or rejects with an error.
+     */
+    Geolocation.getCurrentPosition = function (options) { return; };
+    /**
+     * Watch the current device's position.  Clear the watch by unsubscribing from
+     * Observable changes.
+     *
+     * ```ts
+     * var subscription = Geolocation.watchPosition().subscribe(position => {
+     *   console.log(position.coords.longitude + ' ' + position.coords.latitude);
+     * });
+     *
+     * // To stop notifications
+     * subscription.unsubscribe();
+     * ```
+     *
+     * @param {GeolocationOptions} options  The [geolocation options](https://developer.mozilla.org/en-US/docs/Web/API/PositionOptions).
+     * @return Returns an Observable that notifies with the [position](https://developer.mozilla.org/en-US/docs/Web/API/Position) of the device, or errors.
+     */
+    Geolocation.watchPosition = function (options) { return; };
+    __decorate([
+        plugin_1.Cordova({
+            callbackOrder: 'reverse'
+        })
+    ], Geolocation, "getCurrentPosition", null);
+    __decorate([
+        plugin_1.Cordova({
+            callbackOrder: 'reverse',
+            observable: true,
+            clearFunction: 'clearWatch'
+        })
+    ], Geolocation, "watchPosition", null);
+    Geolocation = __decorate([
+        plugin_1.Plugin({
+            plugin: 'cordova-plugin-geolocation',
+            pluginRef: 'navigator.geolocation',
+            repo: 'https://github.com/apache/cordova-plugin-geolocation'
+        })
+    ], Geolocation);
+    return Geolocation;
+})();
+exports.Geolocation = Geolocation;
+
+},{"./plugin":399}],391:[function(require,module,exports){
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var plugin_1 = require('./plugin');
+/**
+ * @name Globalization
+ * @description
+ * @usage
+ * ```js
+ * import {Globalization} from 'ionic-native';
+ *
+ *
+ *
+ * ```
+ */
+var Globalization = (function () {
+    function Globalization() {
+    }
+    /**
+     * Returns the BCP-47 compliant language identifier tag to the successCallback with a properties object as a parameter. That object should have a value property with a String value.
+     * @return {Promise<{value:string}>}
+     */
+    Globalization.getPreferredLanguage = function () { return; };
+    /**
+     * Returns the BCP 47 compliant locale identifier string to the successCallback with a properties object as a parameter.
+     * @return {Promise<{value:string}>}
+     */
+    Globalization.getLocaleName = function () { return; };
+    /**
+     * Converts date to string
+     * @param date
+     * @param options
+     * @return {Promise<{value:string}>}
+     */
+    Globalization.dateToString = function (date, options) { return; };
+    /**
+     *
+     * @param dateString
+     * @param options
+     */
+    Globalization.stringToDate = function (dateString, options) { return; };
+    /**
+     *
+     * @param options
+     */
+    Globalization.getDatePattern = function (options) { return; };
+    /**
+     *
+     * @param options
+     */
+    Globalization.getDateNames = function (options) { return; };
+    /**
+     * Check if day light saving is active
+     * @param date
+     */
+    Globalization.isDayLightSavingsTime = function (date) { return; };
+    /**
+     * Get first day of week
+     */
+    Globalization.getFirstDayOfWeek = function () { return; };
+    /**
+     *
+     * @param options
+     */
+    Globalization.numberToString = function (options) { return; };
+    /**
+     *
+     * @param string
+     * @param options
+     */
+    Globalization.stringToNumber = function (string, options) { return; };
+    /**
+     *
+     * @param options
+     */
+    Globalization.getNumberPattern = function (options) { return; };
+    /**
+     *
+     * @param currencyCode
+     */
+    Globalization.getCurrencyPattern = function (currencyCode) { return; };
+    __decorate([
+        plugin_1.Cordova()
+    ], Globalization, "getPreferredLanguage", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Globalization, "getLocaleName", null);
+    __decorate([
+        plugin_1.Cordova({
+            successIndex: 1,
+            errorIndex: 2
+        })
+    ], Globalization, "dateToString", null);
+    __decorate([
+        plugin_1.Cordova({
+            successIndex: 1,
+            errorIndex: 2
+        })
+    ], Globalization, "stringToDate", null);
+    __decorate([
+        plugin_1.Cordova({
+            callbackOrder: 'reverse'
+        })
+    ], Globalization, "getDatePattern", null);
+    __decorate([
+        plugin_1.Cordova({
+            callbackOrder: 'reverse'
+        })
+    ], Globalization, "getDateNames", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Globalization, "isDayLightSavingsTime", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Globalization, "getFirstDayOfWeek", null);
+    __decorate([
+        plugin_1.Cordova({
+            successIndex: 1,
+            errorIndex: 2
+        })
+    ], Globalization, "numberToString", null);
+    __decorate([
+        plugin_1.Cordova({
+            successIndex: 1,
+            errorIndex: 2
+        })
+    ], Globalization, "stringToNumber", null);
+    __decorate([
+        plugin_1.Cordova({
+            callbackOrder: 'reverse'
+        })
+    ], Globalization, "getNumberPattern", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Globalization, "getCurrencyPattern", null);
+    Globalization = __decorate([
+        plugin_1.Plugin({
+            plugin: 'cordova-plugin-globalization',
+            pluginRef: 'navigator.globalization',
+            repo: 'https://github.com/apache/cordova-plugin-globalization'
+        })
+    ], Globalization);
+    return Globalization;
+})();
+exports.Globalization = Globalization;
+
+},{"./plugin":399}],392:[function(require,module,exports){
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var plugin_1 = require('./plugin');
+/**
+ * @name Hotspot
+ * @description
+ * @usage
+ * ```js
+ * import {Hotspot} from 'ionic-native';
+ *
+ *
+ *
+ * ```
+ */
+var Hotspot = (function () {
+    function Hotspot() {
+    }
+    Hotspot.isAvailable = function () { return; };
+    Hotspot.toggleWifi = function () { return; };
+    Hotspot.createHotspot = function (ssid, mode, password) { return; };
+    Hotspot.startHotspot = function () { return; };
+    Hotspot.configureHotspot = function (ssid, mode, password) { return; };
+    Hotspot.stopHotspot = function () { return; };
+    Hotspot.isHotspotEnabled = function () { return; };
+    Hotspot.getAllHotspotDevices = function () { return; };
+    Hotspot.connectToHotspot = function (ssid, password) { return; };
+    Hotspot.connectToWifiAuthEncrypt = function (ssid, password, authentication, encryption) { return; };
+    Hotspot.addWifiNetwork = function (ssid, mode, password) { return; };
+    Hotspot.removeWifiNetwork = function (ssid) { return; };
+    Hotspot.isConnectedToInternet = function () { return; };
+    Hotspot.isConnectedToInternetViaWifi = function () { return; };
+    Hotspot.isWifiOn = function () { return; };
+    Hotspot.isWifiSupported = function () { return; };
+    Hotspot.isWifiDirectSupported = function () { return; };
+    Hotspot.scanWifi = function () { return; };
+    Hotspot.scanWifiByLevel = function () { return; };
+    Hotspot.startPeriodicallyScan = function (interval, duration) { return; };
+    Hotspot.stopPeriodicallyScan = function () { return; };
+    Hotspot.getNetConfig = function () { return; };
+    Hotspot.getConnectionInfo = function () { return; };
+    Hotspot.pingHost = function (ip) { return; };
+    Hotspot.getMacAddressOfHost = function (ip) { return; };
+    Hotspot.isDnsLive = function (ip) { return; };
+    Hotspot.isPortLife = function (ip) { return; };
+    Hotspot.isRooted = function () { return; };
+    __decorate([
+        plugin_1.Cordova()
+    ], Hotspot, "isAvailable", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Hotspot, "toggleWifi", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Hotspot, "createHotspot", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Hotspot, "startHotspot", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Hotspot, "configureHotspot", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Hotspot, "stopHotspot", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Hotspot, "isHotspotEnabled", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Hotspot, "getAllHotspotDevices", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Hotspot, "connectToHotspot", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Hotspot, "connectToWifiAuthEncrypt", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Hotspot, "addWifiNetwork", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Hotspot, "removeWifiNetwork", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Hotspot, "isConnectedToInternet", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Hotspot, "isConnectedToInternetViaWifi", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Hotspot, "isWifiOn", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Hotspot, "isWifiSupported", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Hotspot, "isWifiDirectSupported", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Hotspot, "scanWifi", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Hotspot, "scanWifiByLevel", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Hotspot, "startPeriodicallyScan", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Hotspot, "stopPeriodicallyScan", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Hotspot, "getNetConfig", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Hotspot, "getConnectionInfo", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Hotspot, "pingHost", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Hotspot, "getMacAddressOfHost", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Hotspot, "isDnsLive", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Hotspot, "isPortLife", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Hotspot, "isRooted", null);
+    Hotspot = __decorate([
+        plugin_1.Plugin({
+            plugin: 'cordova-plugin-hotspot',
+            pluginRef: 'cordova.plugins.hotspot',
+            repo: 'https://github.com/hypery2k/cordova-hotspot-plugin',
+            platforms: ['Android']
+        })
+    ], Hotspot);
+    return Hotspot;
+})();
+exports.Hotspot = Hotspot;
+
+},{"./plugin":399}],393:[function(require,module,exports){
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var plugin_1 = require('./plugin');
+/**
+ * @name Image Picker
+ * @description
+ * Cordova Plugin For Multiple Image Selection
+ *
+ * Requires Cordova plugin: `cordova-plugin-image-picker`.
+ * For more info, please see the https://github.com/wymsee/cordova-imagePicker
+ *
+ * @usage
+ * ```js
+ * import {ImagePicker} from 'ionic-native';
+ *
+ *
+ *
+ * ImagePicker.getPictures(options).then((results) => {
+ *   for (var i = 0; i < results.length; i++) {
+ *       console.log('Image URI: ' + results[i]);
+ *   }
+ * }, (err) => {
+ * });
+ * ```
+ */
+var ImagePicker = (function () {
+    function ImagePicker() {
+    }
+    /**
+     * Pick pictures from the library.
+     * @param {ImagePickerOptions} options
+     * @return Returns a Promise that resolves the image file URI
+     * otherwise rejects with an error.
+     */
+    ImagePicker.getPictures = function (options) { return; };
+    __decorate([
+        plugin_1.Cordova({
+            callbackOrder: 'reverse'
+        })
+    ], ImagePicker, "getPictures", null);
+    ImagePicker = __decorate([
+        plugin_1.Plugin({
+            plugin: 'cordova-plugin-image-picker',
+            pluginRef: 'window.imagePicker',
+            repo: 'https://github.com/wymsee/cordova-imagePicker'
+        })
+    ], ImagePicker);
+    return ImagePicker;
+})();
+exports.ImagePicker = ImagePicker;
+
+},{"./plugin":399}],394:[function(require,module,exports){
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var plugin_1 = require('./plugin');
+var InAppBrowser = (function () {
+    function InAppBrowser() {
+    }
+    /**
+     * Opens a URL in a new InAppBrowser instance, the current browser instance, or the system browser.
+     * @param  url     The URL to load.
+     * @param  target  The target in which to load the URL, an optional parameter that defaults to _self.
+     * @param  options Options for the InAppBrowser. Optional, defaulting to: location=yes.
+     *                 The options string must not contain any blank space, and each feature's
+     *                 name/value pairs must be separated by a comma. Feature names are case insensitive.
+     */
+    InAppBrowser.open = function (url, target, options) { return; };
+    __decorate([
+        plugin_1.Cordova({
+            sync: true
+        })
+    ], InAppBrowser, "open", null);
+    InAppBrowser = __decorate([
+        plugin_1.Plugin({
+            plugin: 'cordova-plugin-inappbrowser',
+            pluginRef: 'cordova.InAppBrowser'
+        })
+    ], InAppBrowser);
+    return InAppBrowser;
+})();
+exports.InAppBrowser = InAppBrowser;
+
+},{"./plugin":399}],395:[function(require,module,exports){
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var plugin_1 = require('./plugin');
+/**
+ * @name Keyboard
+ * @description
+ * @usage
+ * ```js
+ * import {Keyboard} from 'ionic-native';
+ *
+ *
+ *
+ * ```
+ */
+var Keyboard = (function () {
+    function Keyboard() {
+    }
+    /**
+     * Hide the keyboard accessory bar with the next, previous and done buttons.
+     * @param hide {boolean}
+     */
+    //@Cordova({
+    //  sync: true
+    //})
+    Keyboard.hideKeyboardAccessoryBar = function (hide) {
+        console.log("hideKeyboardAccessoryBar method has been removed temporarily.");
+    };
+    /**
+     * Force keyboard to be shown.
+     */
+    Keyboard.show = function () { };
+    /**
+     * Close the keyboard if open
+     */
+    Keyboard.close = function () { };
+    /**
+     * Prevents the native UIScrollView from moving when an input is focused.
+     * @param disable
+     */
+    Keyboard.disableScroll = function (disable) { };
+    /**
+     * Creates an observable that notifies you when the keyboard is shown. Unsubscribe to observable to cancel event watch.
+     */
+    Keyboard.onKeyboardShow = function () { return; };
+    /**
+     * Creates an observable that notifies you when the keyboard is hidden. Unsubscribe to observable to cancel event watch.
+     */
+    Keyboard.onKeyboardHide = function () { return; };
+    __decorate([
+        plugin_1.Cordova({
+            sync: true,
+            platforms: ['Android', 'BlackBerry 10', 'Windows']
+        })
+    ], Keyboard, "show", null);
+    __decorate([
+        plugin_1.Cordova({
+            sync: true,
+            platforms: ['iOS', 'Android', 'BlackBerry 10', 'Windows']
+        })
+    ], Keyboard, "close", null);
+    __decorate([
+        plugin_1.Cordova({
+            sync: true,
+            platforms: ['iOS', 'Windows']
+        })
+    ], Keyboard, "disableScroll", null);
+    __decorate([
+        plugin_1.Cordova({
+            eventObservable: true,
+            event: 'native.keyboardshow',
+            platforms: ['iOS', 'Android', 'BlackBerry 10', 'Windows']
+        })
+    ], Keyboard, "onKeyboardShow", null);
+    __decorate([
+        plugin_1.Cordova({
+            eventObservable: true,
+            event: 'native.keyboardhide',
+            platforms: ['iOS', 'Android', 'BlackBerry 10', 'Windows']
+        })
+    ], Keyboard, "onKeyboardHide", null);
+    Keyboard = __decorate([
+        plugin_1.Plugin({
+            plugin: 'ionic-plugin-keyboard',
+            pluginRef: 'cordova.plugins.Keyboard',
+            repo: 'https://github.com/driftyco/ionic-plugin-keyboard'
+        })
+    ], Keyboard);
+    return Keyboard;
+})();
+exports.Keyboard = Keyboard;
+
+},{"./plugin":399}],396:[function(require,module,exports){
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var plugin_1 = require('./plugin');
+/**
+ * @name Launch Navigator
+ * @description
+ * Requires Cordova plugin: uk.co.workingedge.phonegap.plugin.launchnavigator. For more info, please see the [LaunchNavigator plugin docs](https://github.com/dpa99c/phonegap-launch-navigator).
+ *
+ * @usage
+ * ```js
+ * import {LaunchNavigator} from 'ionic-native';
+ *
+ *
+ *
+ * LaunchNavigator.navigate("Toronto, ON", "London, ON")
+ *   .then(
+ *     success => console.log("Launched navigator"),
+ *     error => console.log("Error launching navigator", error)
+ *   );
+ * ```
+ */
+var LaunchNavigator = (function () {
+    function LaunchNavigator() {
+    }
+    /**
+     * Launches navigator app
+     * @param destination Location name or coordinates
+     * @param start Location name or coordinates
+     * @param options
+     * @returns {Promise<any>}
+     */
+    LaunchNavigator.navigate = function (destination, start, options) {
+        if (start === void 0) { start = null; }
+        return;
+    };
+    __decorate([
+        plugin_1.Cordova({
+            successIndex: 2,
+            errorIndex: 3
+        })
+    ], LaunchNavigator, "navigate", null);
+    LaunchNavigator = __decorate([
+        plugin_1.Plugin({
+            plugin: 'uk.co.workingedge.phonegap.plugin.launchnavigator',
+            pluginRef: 'launchnavigator',
+            repo: 'https://github.com/dpa99c/phonegap-launch-navigator.git'
+        })
+    ], LaunchNavigator);
+    return LaunchNavigator;
+})();
+exports.LaunchNavigator = LaunchNavigator;
+
+},{"./plugin":399}],397:[function(require,module,exports){
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var plugin_1 = require('./plugin');
+/**
+ * @name Local Notifications
+ * @description
+ * This plugin allows you to display local notifications on the device
+ *
+ * @usage
+ * ```ts
+ * import {LocalNotifications} from 'ionic-native';
+ *
+ *
+ *
+ * // Schedule a single notification
+ * LocalNotifications.schedule({
+ *   id: 1,
+ *   text: "Single Notification",
+ *   sound: isAndroid? 'file://sound.mp3' : 'file://beep.caf'
+ *   data: { secret: key }
+ * });
+ *
+ *
+ * // Schedule multiple notifications
+ * LocalNotifications.schedule([{
+ *    id: 1,
+ *    text: "Multi Notification 1",
+ *    sound: isAndroid ? 'file://sound.mp3' : 'file://beep.caf',
+ *    data: { secret:key }
+ *   },{
+ *    id: 2,
+ *    title: "Local Notification Example",
+ *    text: "Multi Notification 2",
+ *    icon: "http://example.com/icon.png"
+ * }]);
+ *
+ *
+ * // Schedule delayed notification
+ * LocalNotifications.schedule({
+ *   t ext: "Delayed Notification",
+ *    at: new Date(new Date() + 3600),
+ *    led: "FF0000",
+ *    sound: null
+ * });
+ * ```
+ *
+ */
+var LocalNotifications = (function () {
+    function LocalNotifications() {
+    }
+    /**
+     * Schedules a single or multiple notifications
+     * @param options
+     */
+    LocalNotifications.schedule = function (options) { };
+    /**
+     * Updates a previously scheduled notification. Must include the id in the options parameter.
+     * @param options
+     */
+    LocalNotifications.update = function (options) { };
+    /**
+     * Clears single or multiple notifications
+     * @param notificationId A single notification id, or an array of notification ids.
+     */
+    LocalNotifications.clear = function (notificationId) { return; };
+    /**
+     * Clears all notifications
+     */
+    LocalNotifications.clearAll = function () { return; };
+    /**
+     * Cancels single or multiple notifications
+     * @param notificationId A single notification id, or an array of notification ids.
+     */
+    LocalNotifications.cancel = function (notificationId) { return; };
+    /**
+     * Cancels all notifications
+     */
+    LocalNotifications.cancelAll = function () { return; };
+    /**
+     * Checks presence of a notification
+     * @param notificationId
+     */
+    LocalNotifications.isPresent = function (notificationId) { return; };
+    /**
+     * Checks is a notification is scheduled
+     * @param notificationId
+     */
+    LocalNotifications.isScheduled = function (notificationId) { return; };
+    /**
+     * Checks if a notification is triggered
+     * @param notificationId
+     */
+    LocalNotifications.isTriggered = function (notificationId) { return; };
+    /**
+     * Get all the notification ids
+     */
+    LocalNotifications.getAllIds = function () { return; };
+    /**
+     * Get the ids of triggered notifications
+     */
+    LocalNotifications.getTriggeredIds = function () { return; };
+    /**
+     * Get the ids of scheduled notifications
+     */
+    LocalNotifications.getScheduledIds = function () { return; };
+    /**
+     * Get a notification object
+     * @param notificationId The id of the notification to get
+     */
+    LocalNotifications.get = function (notificationId) { return; };
+    /**
+     * Get a scheduled notification object
+     * @param notificationId The id of the notification to get
+     */
+    LocalNotifications.getScheduled = function (notificationId) { return; };
+    /**
+     * Get a triggered notification object
+     * @param notificationId The id of the notification to get
+     */
+    LocalNotifications.getTriggered = function (notificationId) { return; };
+    /**
+     * Get all notification objects
+     */
+    LocalNotifications.getAll = function () { return; };
+    /**
+     * Get all scheduled notification objects
+     */
+    LocalNotifications.getAllScheduled = function () { return; };
+    /**
+     * Get all triggered notification objects
+     */
+    LocalNotifications.getAllTriggered = function () { return; };
+    /**
+     * Sets a callback for a specific event
+     * @param eventName The name of the event. Available events: schedule, trigger, click, update, clear, clearall, cancel, cancelall
+     * @param callback Call back function. All events return notification and state parameter. clear and clearall return state parameter only.
+     */
+    LocalNotifications.on = function (eventName, callback) { };
+    __decorate([
+        plugin_1.Cordova({
+            sync: true
+        })
+    ], LocalNotifications, "schedule", null);
+    __decorate([
+        plugin_1.Cordova({
+            sync: true
+        })
+    ], LocalNotifications, "update", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], LocalNotifications, "clear", null);
+    __decorate([
+        plugin_1.Cordova({
+            successIndex: 0,
+            errorIndex: 2
+        })
+    ], LocalNotifications, "clearAll", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], LocalNotifications, "cancel", null);
+    __decorate([
+        plugin_1.Cordova({
+            successIndex: 0,
+            errorIndex: 2
+        })
+    ], LocalNotifications, "cancelAll", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], LocalNotifications, "isPresent", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], LocalNotifications, "isScheduled", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], LocalNotifications, "isTriggered", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], LocalNotifications, "getAllIds", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], LocalNotifications, "getTriggeredIds", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], LocalNotifications, "getScheduledIds", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], LocalNotifications, "get", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], LocalNotifications, "getScheduled", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], LocalNotifications, "getTriggered", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], LocalNotifications, "getAll", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], LocalNotifications, "getAllScheduled", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], LocalNotifications, "getAllTriggered", null);
+    __decorate([
+        plugin_1.Cordova({
+            sync: true
+        })
+    ], LocalNotifications, "on", null);
+    LocalNotifications = __decorate([
+        plugin_1.Plugin({
+            plugin: 'de.appplant.cordova.plugin.local-notification',
+            pluginRef: 'cordova.plugins.notification.local',
+            repo: 'https://github.com/katzer/cordova-plugin-local-notifications'
+        })
+    ], LocalNotifications);
+    return LocalNotifications;
+})();
+exports.LocalNotifications = LocalNotifications;
+
+},{"./plugin":399}],398:[function(require,module,exports){
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var plugin_1 = require('./plugin');
+/**
+ * @name Network
+ * @description
+ * Requires Cordova plugin: cordova-plugin-network-information. For more info, please see the [Network plugin docs](https://github.com/apache/cordova-plugin-network-information).
+ *
+ * @usage
+ * ```js
+ * import {Network, Connection} from 'ionic-native';
+ *
+ * // watch network for a disconnect
+ * let disconnectSubscription = Network.onDisconnect().subscribe(() => {
+ *   console.log('network was disconnected :-( ')
+ * });
+ *
+ * // stop disconnect watch
+ * disconnectSubscription.unsubscribe();
+ *
+ *
+ * // watch network for a connection
+ * let connectSubscription = Network.onConnect().subscribe(() => {
+ *   console.log('network connected!');
+*
+ *   // We just got a connection but we need to wait briefly
+ *
+// before we determine the connection type.  Might need to wait
+
+ *   // prior to doing any api requests as well.
+ *   setTimeout(() => {
+ *     console.log(Network.connection);
+ *     if (Network.connection === Connection.WIFI) {
+ *       console.log('we got a wifi connection, woohoo!');
+ *     }
+ *   });
+ * });
+ *
+ * // stop connect watch
+ * connectSubscription.unsubscribe();
+ *
+ * ```
+ */
+var Network = (function () {
+    function Network() {
+    }
+    Object.defineProperty(Network, "connection", {
+        /**
+         * Return the network connection type
+         */
+        get: function () { return navigator.connection.type; },
+        enumerable: true,
+        configurable: true
+    });
+    /**
+     * Watch the network for a disconnect (i.e. network goes offline)
+     * @returns {Observable<any>} Returns an observable.
+     */
+    Network.onDisconnect = function () { return; };
+    /**
+     * Watch the network for a connection (i.e. network goes online)
+     * @returns {Observable<any>} Returns an observable.
+     */
+    Network.onConnect = function () { return; };
+    __decorate([
+        plugin_1.CordovaProperty
+    ], Network, "connection", null);
+    __decorate([
+        plugin_1.Cordova({
+            eventObservable: true,
+            event: 'offline'
+        })
+    ], Network, "onDisconnect", null);
+    __decorate([
+        plugin_1.Cordova({
+            eventObservable: true,
+            event: 'online'
+        })
+    ], Network, "onConnect", null);
+    Network = __decorate([
+        plugin_1.Plugin({
+            plugin: 'cordova-plugin-network-information',
+            repo: 'https://github.com/apache/cordova-plugin-network-information',
+            platforms: ['Amazon Fire OS', 'iOS', 'Android', 'BlackBerry 10', 'Windows Phone 7', 'Windows Phone 8', 'Windows', 'Firefox OS', 'Browser'],
+            pluginRef: 'navigator.connection'
+        })
+    ], Network);
+    return Network;
+})();
+exports.Network = Network;
+var Connection = (function () {
+    function Connection() {
+    }
+    Object.defineProperty(Connection, "UNKNOWN", {
+        get: function () { return "unknown"; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(Connection, "ETHERNET", {
+        get: function () { return "ethernet"; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(Connection, "WIFI", {
+        get: function () { return "wifi"; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(Connection, "CELL_2G", {
+        get: function () { return "2g"; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(Connection, "CELL_3G", {
+        get: function () { return "3g"; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(Connection, "CELL_4G", {
+        get: function () { return "4g"; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(Connection, "CELL", {
+        get: function () { return "cellular"; },
+        enumerable: true,
+        configurable: true
+    });
+    Object.defineProperty(Connection, "NONE", {
+        get: function () { return "none"; },
+        enumerable: true,
+        configurable: true
+    });
+    return Connection;
+})();
+exports.Connection = Connection;
+
+},{"./plugin":399}],399:[function(require,module,exports){
+var util_1 = require('../util');
+var Observable_1 = require('rxjs/Observable');
+/**
+ * @private
+ * @param pluginRef
+ * @returns {null|*}
+ */
+exports.getPlugin = function (pluginRef) {
+    return util_1.get(window, pluginRef);
+};
+/**
+ * @private
+ * @param pluginRef
+ * @returns {boolean}
+ */
+exports.isInstalled = function (pluginRef) {
+    return !!exports.getPlugin(pluginRef);
+};
+/**
+ * @private
+ * @param pluginObj
+ * @param method
+ */
+exports.pluginWarn = function (pluginObj, method) {
+    var pluginName = pluginObj.name;
+    var plugin = pluginObj.plugin;
+    if (method) {
+        console.warn('Native: tried calling ' + pluginName + '.' + method + ', but the ' + pluginName + ' plugin is not installed.');
+    }
+    else {
+        console.warn('Native: tried accessing the ' + pluginName + ' plugin but it\'s not installed.');
+    }
+    console.warn('Install the ' + pluginName + ' plugin: \'cordova plugin add ' + plugin + '\'');
+};
+/**
+ * @private
+ * @param pluginName
+ * @param method
+ */
+exports.cordovaWarn = function (pluginName, method) {
+    if (method) {
+        console.warn('Native: tried calling ' + pluginName + '.' + method + ', but Cordova is not available. Make sure to include cordova.js or run in a device/simulator');
+    }
+    else {
+        console.warn('Native: tried accessing the ' + pluginName + ' plugin but Cordova is not available. Make sure to include cordova.js or run in a device/simulator');
+    }
+};
+function callCordovaPlugin(pluginObj, methodName, args, opts, resolve, reject) {
+    // Try to figure out where the success/error callbacks need to be bound
+    // to our promise resolve/reject handlers.
+    if (opts === void 0) { opts = {}; }
+    // If the plugin method expects myMethod(success, err, options)
+    if (opts.callbackOrder == 'reverse') {
+        // Get those arguments in the order [resolve, reject, ...restOfArgs]
+        args.unshift(reject);
+        args.unshift(resolve);
+    }
+    else if (typeof opts.successIndex !== 'undefined' || typeof opts.errorIndex !== 'undefined') {
+        // If we've specified a success/error index
+        args.splice(opts.successIndex, 0, resolve);
+        args.splice(opts.errorIndex, 0, reject);
+    }
+    else {
+        // Otherwise, let's tack them on to the end of the argument list
+        // which is 90% of cases
+        args.push(resolve);
+        args.push(reject);
+    }
+    var pluginInstance = exports.getPlugin(pluginObj.pluginRef);
+    if (!pluginInstance) {
+        // Do this check in here in the case that the Web API for this plugin is available (for example, Geolocation).
+        if (!window.cordova) {
+            exports.cordovaWarn(pluginObj.name, methodName);
+            reject && reject({
+                error: 'cordova_not_available'
+            });
+            return;
+        }
+        exports.pluginWarn(pluginObj, methodName);
+        reject && reject({
+            error: 'plugin_not_installed'
+        });
+        return;
+    }
+    // console.log('Cordova calling', pluginObj.name, methodName, args);
+    // TODO: Illegal invocation needs window context
+    return util_1.get(window, pluginObj.pluginRef)[methodName].apply(pluginInstance, args);
+}
+function getPromise(cb) {
+    if (window.Promise) {
+        // console.log('Native promises available...');
+        return new Promise(function (resolve, reject) {
+            cb(resolve, reject);
+        });
+    }
+    else if (window.angular) {
+        var $q_1 = window.angular.injector(['ng']).get('$q');
+        // console.log('Loaded $q', $q);
+        return $q_1(function (resolve, reject) {
+            cb(resolve, reject);
+        });
+    }
+    else {
+        console.error('No Promise support or polyfill found. To enable Ionic Native support, please add the es6-promise polyfill before this script, or run with a library like Angular 1/2 or on a recent browser.');
+    }
+}
+function wrapPromise(pluginObj, methodName, args, opts) {
+    if (opts === void 0) { opts = {}; }
+    return getPromise(function (resolve, reject) {
+        callCordovaPlugin(pluginObj, methodName, args, opts, resolve, reject);
+    });
+}
+function wrapObservable(pluginObj, methodName, args, opts) {
+    if (opts === void 0) { opts = {}; }
+    return new Observable_1.Observable(function (observer) {
+        var pluginResult = callCordovaPlugin(pluginObj, methodName, args, opts, observer.next.bind(observer), observer.error.bind(observer));
+        return function () {
+            try {
+                if (opts.clearWithArgs) {
+                    return util_1.get(window, pluginObj.pluginRef)[opts.clearFunction].apply(pluginObj, args);
+                }
+                return util_1.get(window, pluginObj.pluginRef)[opts.clearFunction].call(pluginObj, pluginResult);
+            }
+            catch (e) {
+                console.warn('Unable to clear the previous observable watch for', pluginObj.name, methodName);
+                console.error(e);
+            }
+        };
+    });
+}
+/**
+ * Wrap the event with an observable
+ * @param event
+ * @returns {Observable}
+ */
+function wrapEventObservable(event) {
+    return new Observable_1.Observable(function (observer) {
+        var callback = function (status) { return observer.next(status); };
+        window.addEventListener(event, callback, false);
+        return function () { return window.removeEventListener(event, callback, false); };
+    });
+}
+/**
+ * @private
+ * @param pluginObj
+ * @param methodName
+ * @param opts
+ * @returns {function(...[any]): (undefined|*|Observable|*|*)}
+ */
+exports.wrap = function (pluginObj, methodName, opts) {
+    if (opts === void 0) { opts = {}; }
+    return function () {
+        var args = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            args[_i - 0] = arguments[_i];
+        }
+        if (opts.sync)
+            return callCordovaPlugin(pluginObj, methodName, args, opts);
+        else if (opts.observable)
+            return wrapObservable(pluginObj, methodName, args, opts);
+        else if (opts.eventObservable && opts.event)
+            return wrapEventObservable(opts.event);
+        else
+            return wrapPromise(pluginObj, methodName, args, opts);
+    };
+};
+/**
+ * @private
+ *
+ * Class decorator specifying Plugin metadata. Required for all plugins.
+ *
+ * @usage
+ * ```ts
+ * @Plugin({
+ *  name: 'MyPlugin',
+ *  plugin: 'cordova-plugin-myplugin',
+ *  pluginRef: 'window.myplugin'
+ *  })
+ *  export class MyPlugin {
+ *
+ *    // Plugin wrappers, properties, and functions go here ...
+ *
+ *  }
+ * ```
+ */
+function Plugin(config) {
+    return function (cls) {
+        // Add these fields to the class
+        for (var k in config) {
+            cls[k] = config[k];
+        }
+        cls['installed'] = function () {
+            return !!exports.getPlugin(config.pluginRef);
+        };
+        return cls;
+    };
+}
+exports.Plugin = Plugin;
+/**
+ * @private
+ *
+ * Wrap a stub function in a call to a Cordova plugin, checking if both Cordova
+ * and the required plugin are installed.
+ */
+function Cordova(opts) {
+    if (opts === void 0) { opts = {}; }
+    return function (target, methodName, descriptor) {
+        var originalMethod = descriptor.value;
+        return {
+            value: function () {
+                var args = [];
+                for (var _i = 0; _i < arguments.length; _i++) {
+                    args[_i - 0] = arguments[_i];
+                }
+                return exports.wrap(this, methodName, opts).apply(this, args);
+            }
+        };
+    };
+}
+exports.Cordova = Cordova;
+/**
+ * @private
+ *
+ *
+ * Before calling the original method, ensure Cordova and the plugin are installed.
+ */
+function CordovaProperty(target, key, descriptor) {
+    var originalMethod = descriptor.get;
+    descriptor.get = function () {
+        var args = [];
+        for (var _i = 0; _i < arguments.length; _i++) {
+            args[_i - 0] = arguments[_i];
+        }
+        // console.log('Calling', this);
+        if (!window.cordova) {
+            exports.cordovaWarn(this.name, null);
+            return {};
+        }
+        var pluginInstance = exports.getPlugin(this.pluginRef);
+        if (!pluginInstance) {
+            exports.pluginWarn(this, key);
+            return {};
+        }
+        return originalMethod.apply(this, args);
+    };
+    return descriptor;
+}
+exports.CordovaProperty = CordovaProperty;
+
+},{"../util":409,"rxjs/Observable":413}],400:[function(require,module,exports){
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var plugin_1 = require('./plugin');
+/**
+ * @name Push
+ * @description
+ * Register and receive push notifications.
+ *
+ * Requires Cordova plugin: `phonegap-plugin-push`. For more info, please see the [Push plugin docs](https://github.com/phonegap/phonegap-plugin-push).
+ *
+ * For TypeScript users, see the [Push plugin docs about using TypeScript for custom notifications](https://github.com/phonegap/phonegap-plugin-push/blob/master/docs/TYPESCRIPT.md).
+ *
+ * @usage
+ * ```js
+ * import {Push} from 'ionic-native';
+ *
+ *
+ *
+ * ```
+ */
+var Push = (function () {
+    function Push() {
+    }
+    /**
+     * Initialize the plugin on the native side.
+     *
+     * ```
+     * var push = Push.init({
+     *    android: {
+     *        senderID: "12345679"
+     *    },
+     *    ios: {
+     *        alert: "true",
+     *        badge: true,
+     *        sound: 'false'
+     *    },
+     *    windows: {}
+     * });
+     * ```
+     *
+     * @param {PushOptions} options  The Push [options](https://github.com/phonegap/phonegap-plugin-push/blob/master/docs/API.md#parameters).
+     * @return {PushNotification}  Returns a new [PushNotification](https://github.com/phonegap/phonegap-plugin-push/blob/master/docs/API.md#pushonevent-callback) object.
+     */
+    Push.init = function (options) { return; };
+    /**
+     * Check whether the push notification permission has been granted.
+     * @return {Promise} Returns a Promise that resolves with an object with one property: isEnabled, a boolean that indicates if permission has been granted.
+     */
+    Push.hasPermission = function () { return; };
+    __decorate([
+        plugin_1.Cordova({
+            sync: true
+        })
+    ], Push, "init", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Push, "hasPermission", null);
+    Push = __decorate([
+        plugin_1.Plugin({
+            plugin: 'phonegap-plugin-push',
+            pluginRef: 'PushNotification',
+            repo: 'https://github.com/phonegap/phonegap-plugin-push'
+        })
+    ], Push);
+    return Push;
+})();
+exports.Push = Push;
+
+},{"./plugin":399}],401:[function(require,module,exports){
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var plugin_1 = require('./plugin');
+/**
+ * @name SMS
+ * @description
+ *
+ * Requires Cordova plugin: cordova-plugin-sms. For more info, please see the [SMS plugin docs](https://github.com/cordova-sms/cordova-sms-plugin).
+ *
+ * @usage
+ * ```ts
+ * import {SMS} from 'ionic-native';
+ *
+ *
+ *
+ * // Send a text message using default options
+ * SMS.send('416123456','Hello world!');
+ *
+ * ```
+ */
+var SMS = (function () {
+    function SMS() {
+    }
+    /**
+     * Sends sms to a number
+     * @param number {string|Array<string>} Phone number
+     * @param message {string} Message
+     * @param options {smsOptions} Options
+     * @returns {Promise<any>} Resolves promise when the SMS has been sent
+     */
+    SMS.send = function (number, message, options) { return; };
+    __decorate([
+        plugin_1.Cordova()
+    ], SMS, "send", null);
+    SMS = __decorate([
+        plugin_1.Plugin({
+            plugin: 'cordova-sms-plugin',
+            pluginRef: 'sms',
+            repo: 'https://github.com/cordova-sms/cordova-sms-plugin',
+            platforms: ['Android', 'iOS', 'Windows Phone 8']
+        })
+    ], SMS);
+    return SMS;
+})();
+exports.SMS = SMS;
+
+},{"./plugin":399}],402:[function(require,module,exports){
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var plugin_1 = require('./plugin');
+/**
+ * @name Social Sharing
+ * @description
+ * Share text, files, images, and links via social networks, sms, and email.
+ * @usage
+ * ```js
+ * import {SocialSharing} from 'ionic-native';
+ *
+ * ...
+ * // TODO add usage info
+ * ```
+ */
+var SocialSharing = (function () {
+    function SocialSharing() {
+    }
+    /**
+     * Shares using the share sheet
+     * @param message {string} The message you would like to share.
+     * @param subject {string} The subject
+     * @param file {string|Array<string>} URL(s) to file(s) or image(s), local path(s) to file(s) or image(s), or base64 data of an image. Only the first file/image will be used on Windows Phone.
+     * @param url {string} A URL to share
+     */
+    SocialSharing.share = function (message, subject, file, url) { };
+    /**
+     * Checks if you can share via a specific app.
+     * @param appName App name or package name. Examples: instagram or com.apple.social.facebook
+     */
+    SocialSharing.canShareVia = function (appName) { return; };
+    /**
+     * Shares directly to Twitter
+     * @param message
+     * @param image
+     * @param url
+     */
+    SocialSharing.shareViaTwitter = function (message, image, url) { };
+    /**
+     * Shares directly to Facebook
+     * @param message {string}
+     * @param image {string}
+     * @param url {string}
+     */
+    SocialSharing.shareViaFacebook = function (message, image, url) { return; };
+    /**
+     * Shares directly to Facebook with a paste message hint
+     * @param message {string}
+     * @param image {string}
+     * @param url {string}
+     * @param pasteMessageHint {string}
+     */
+    SocialSharing.shareViaFacebookWithPasteMessageHint = function (message, image, url, pasteMessageHint) { return; };
+    /**
+     * Shares directly to Instagram
+     * @param message {string}
+     * @param image {string}
+     */
+    SocialSharing.shareViaInstagram = function (message, image) { return; };
+    /**
+     * Shares directly to WhatsApp
+     * @param message {string}
+     * @param image {string}
+     * @param url {string}
+     */
+    SocialSharing.shareViaWhatsApp = function (message, image, url) { return; };
+    /**
+     * Shares directly to a WhatsApp Contact
+     * @param receiver {string} Pass phone number on Android, and Addressbook ID (abid) on iOS
+     * @param message {string} Message to send
+     * @param image {string} Image to send (does not work on iOS
+     * @param url {string} Link to send
+     */
+    SocialSharing.shareViaWhatsAppToReceiver = function (receiver, message, image, url) { return; };
+    /**
+     * Share via SMS
+     * @param messge {string} message to send
+     * @param number {string} Number or multiple numbers seperated by commas
+     */
+    SocialSharing.shareViaSMS = function (messge, number) { return; };
+    /**
+     * Share via Email
+     * @param message {string}
+     * @param subject {string}
+     * @param to {Array<string>}
+     * @param cc {Array<string>}
+     * @param bcc {Array<string>}
+     * @param files {string|Array<string>} URL or local path to file(s) to attach
+     */
+    SocialSharing.shareViaEmail = function (message, subject, to, cc, bcc, files) { return; };
+    __decorate([
+        plugin_1.Cordova({
+            sync: true
+        })
+    ], SocialSharing, "share", null);
+    __decorate([
+        plugin_1.Cordova({
+            platforms: ['iOS', 'Android']
+        })
+    ], SocialSharing, "canShareVia", null);
+    __decorate([
+        plugin_1.Cordova({
+            sync: true,
+            platforms: ['iOS', 'Android']
+        })
+    ], SocialSharing, "shareViaTwitter", null);
+    __decorate([
+        plugin_1.Cordova({
+            platforms: ['iOS', 'Android']
+        })
+    ], SocialSharing, "shareViaFacebook", null);
+    __decorate([
+        plugin_1.Cordova({
+            platforms: ['iOS', 'Android']
+        })
+    ], SocialSharing, "shareViaFacebookWithPasteMessageHint", null);
+    __decorate([
+        plugin_1.Cordova({
+            platforms: ['iOS', 'Android']
+        })
+    ], SocialSharing, "shareViaInstagram", null);
+    __decorate([
+        plugin_1.Cordova({
+            platforms: ['iOS', 'Android']
+        })
+    ], SocialSharing, "shareViaWhatsApp", null);
+    __decorate([
+        plugin_1.Cordova({
+            platforms: ['iOS', 'Android']
+        })
+    ], SocialSharing, "shareViaWhatsAppToReceiver", null);
+    __decorate([
+        plugin_1.Cordova({
+            platforms: ['iOS', 'Android']
+        })
+    ], SocialSharing, "shareViaSMS", null);
+    __decorate([
+        plugin_1.Cordova({
+            platforms: ['iOS', 'Android']
+        })
+    ], SocialSharing, "shareViaEmail", null);
+    SocialSharing = __decorate([
+        plugin_1.Plugin({
+            plugin: 'cordova-plugin-x-socialsharing',
+            pluginRef: 'window.plugins.socialsharing',
+            repo: 'https://github.com/EddyVerbruggen/SocialSharing-PhoneGap-Plugin',
+            platforms: ['iOS', 'Android', 'Windows Phone']
+        })
+    ], SocialSharing);
+    return SocialSharing;
+})();
+exports.SocialSharing = SocialSharing;
+
+},{"./plugin":399}],403:[function(require,module,exports){
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var plugin_1 = require('./plugin');
+/**
+ * @name Spinner Dialog
+ * @description
+ * @usage
+ * ```js
+ * import {SpinnerDialog} from 'ionic-native';
+ *
+ *
+ *
+ * SpinnerDialog.show();
+ *
+ * SpinnerDialog.hide();
+ * ```
+ */
+var SpinnerDialog = (function () {
+    function SpinnerDialog() {
+    }
+    /**
+     * Shows the spinner dialog
+     * @param title {string} Spinner title (shows on Android only)
+     * @param message {string} Spinner message
+     * @param cancelCallback {boolean|function} Set to false to set spinner not cancelable. Or provide a function to call when the user cancels the spinner.
+     * @param iOSOptions {object} Options for iOS only
+     */
+    SpinnerDialog.show = function (title, message, cancelCallback, iOSOptions) { };
+    /**
+     * Hides the spinner dialog if visible
+     */
+    SpinnerDialog.hide = function () { };
+    __decorate([
+        plugin_1.Cordova({
+            sync: true
+        })
+    ], SpinnerDialog, "show", null);
+    __decorate([
+        plugin_1.Cordova({
+            sync: true
+        })
+    ], SpinnerDialog, "hide", null);
+    SpinnerDialog = __decorate([
+        plugin_1.Plugin({
+            plugin: 'cordova-plugin-spinner-dialog',
+            pluginRef: 'window.plugins.spinnerDialog',
+            repo: 'https://github.com/Paldom/SpinnerDialog',
+            platforms: ['Android', 'iOS', 'Windows Phone 8']
+        })
+    ], SpinnerDialog);
+    return SpinnerDialog;
+})();
+exports.SpinnerDialog = SpinnerDialog;
+
+},{"./plugin":399}],404:[function(require,module,exports){
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var plugin_1 = require('./plugin');
+/**
+ * @name Splashscreen
+ * @description This plugin displays and hides a splash screen during application launch. The methods below allows showing and hiding the splashscreen after the app has loaded.
+ * @usage
+ * ```ts
+ * import {Splashscreen} from 'ionic-native';
+ *
+ *
+ *
+ * Splashscreen.show();
+ *
+ * Splashscreen.hide();
+ * ```
+ */
+var Splashscreen = (function () {
+    function Splashscreen() {
+    }
+    /**
+     * Shows the splashscreen
+     */
+    Splashscreen.show = function () { };
+    /**
+     * Hides the splashscreen
+     */
+    Splashscreen.hide = function () { };
+    __decorate([
+        plugin_1.Cordova({
+            sync: true
+        })
+    ], Splashscreen, "show", null);
+    __decorate([
+        plugin_1.Cordova({
+            sync: true
+        })
+    ], Splashscreen, "hide", null);
+    Splashscreen = __decorate([
+        plugin_1.Plugin({
+            plugin: 'cordova-plugin-splashscreen',
+            pluginRef: 'navigator.splashscreen',
+            repo: 'https://github.com/apache/cordova-plugin-splashscreen'
+        })
+    ], Splashscreen);
+    return Splashscreen;
+})();
+exports.Splashscreen = Splashscreen;
+
+},{"./plugin":399}],405:[function(require,module,exports){
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var plugin_1 = require('./plugin');
+/**
+ * @name Status Bar
+ * @description
+ * Manage the appearance of the native status bar.
+ *
+ * Requires Cordova plugin: `cordova-plugin-statusbar`. For more info, please see the [StatusBar plugin docs](https://github.com/apache/cordova-plugin-statusbar).
+ *
+ * @usage
+ * ```ts
+ * import {StatusBar} from 'ionic-native';
+ *
+ *
+ *
+ * StatuBar.overlaysWebView(true);
+ *
+ * StatusBar.
+ * ```
+ *
+ */
+var StatusBar = (function () {
+    function StatusBar() {
+    }
+    /**
+     * Set whether the status bar overlays the main app view. The default
+     * is true.
+     *
+     * @param {boolean} doesOverlay  Whether the status bar overlays the main app view.
+     */
+    StatusBar.overlaysWebView = function (doesOverlay) { };
+    ;
+    /**
+     * Use the default statusbar (dark text, for light backgrounds).
+     */
+    StatusBar.styleDefault = function () { };
+    ;
+    /**
+     * Use the lightContent statusbar (light text, for dark backgrounds).
+     */
+    StatusBar.styleLightContent = function () { };
+    ;
+    /**
+     * Use the blackTranslucent statusbar (light text, for dark backgrounds).
+     */
+    StatusBar.styleBlackTranslucent = function () { };
+    ;
+    /**
+     * Use the blackOpaque statusbar (light text, for dark backgrounds).
+     */
+    StatusBar.styleBlackOpaque = function () { };
+    ;
+    /**
+     * Set the status bar to a specific named color. Valid options:
+     * black, darkGray, lightGray, white, gray, red, green, blue, cyan, yellow, magenta, orange, purple, brown.
+     *
+     * iOS note: you must call StatusBar.setOverlay(false) to enable color changing.
+     *
+     * @param {string} colorName  The name of the color (from above)
+     */
+    StatusBar.backgroundColorByName = function (colorName) { };
+    ;
+    /**
+     * Set the status bar to a specific hex color (CSS shorthand supported!).
+     *
+     * iOS note: you must call StatusBar.setOverlay(false) to enable color changing.
+     *
+     * @param {string} hexString  The hex value of the color.
+     */
+    StatusBar.backgroundColorByHexString = function (hexString) { };
+    ;
+    /**
+     * Hide the StatusBar
+     */
+    StatusBar.hide = function () { };
+    ;
+    /**
+    * Show the StatusBar
+    */
+    StatusBar.show = function () { };
+    ;
+    Object.defineProperty(StatusBar, "isVisible", {
+        /**
+         * Whether the StatusBar is currently visible or not.
+         */
+        get: function () { return window.StatusBar.isVisible; },
+        enumerable: true,
+        configurable: true
+    });
+    __decorate([
+        plugin_1.Cordova({
+            sync: true
+        })
+    ], StatusBar, "overlaysWebView", null);
+    __decorate([
+        plugin_1.Cordova({
+            sync: true
+        })
+    ], StatusBar, "styleDefault", null);
+    __decorate([
+        plugin_1.Cordova({
+            sync: true
+        })
+    ], StatusBar, "styleLightContent", null);
+    __decorate([
+        plugin_1.Cordova({
+            sync: true
+        })
+    ], StatusBar, "styleBlackTranslucent", null);
+    __decorate([
+        plugin_1.Cordova({
+            sync: true
+        })
+    ], StatusBar, "styleBlackOpaque", null);
+    __decorate([
+        plugin_1.Cordova({
+            sync: true
+        })
+    ], StatusBar, "backgroundColorByName", null);
+    __decorate([
+        plugin_1.Cordova({
+            sync: true
+        })
+    ], StatusBar, "backgroundColorByHexString", null);
+    __decorate([
+        plugin_1.Cordova({
+            sync: true
+        })
+    ], StatusBar, "hide", null);
+    __decorate([
+        plugin_1.Cordova({
+            sync: true
+        })
+    ], StatusBar, "show", null);
+    __decorate([
+        plugin_1.CordovaProperty
+    ], StatusBar, "isVisible", null);
+    StatusBar = __decorate([
+        plugin_1.Plugin({
+            plugin: 'cordova-plugin-statusbar',
+            pluginRef: 'StatusBar',
+            repo: 'https://github.com/apache/cordova-plugin-statusbar'
+        })
+    ], StatusBar);
+    return StatusBar;
+})();
+exports.StatusBar = StatusBar;
+
+},{"./plugin":399}],406:[function(require,module,exports){
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var plugin_1 = require('./plugin');
+/**
+ * @name Toast
+ * @description
+ * This plugin allows you to show a native Toast (a little text popup) on iOS, Android and WP8. It's great for showing a non intrusive native notification which is guaranteed always in the viewport of the browser.
+ *
+ * Requires Cordova plugin: `cordova-plugin-x-toast`. For more info, please see the [Toast plugin docs](https://github.com/EddyVerbruggen/Toast-PhoneGap-Plugin).
+ *
+ * @usage
+ * ```ts
+ * import {Toast} from 'ionic-native';
+ *
+ *
+ *
+ * Toast.show("I'm a toast", 5000, "center").subscribe(
+ *   toast => {
+ *     console.log(toast);
+ *   }
+ * );
+ * ```
+ */
+var Toast = (function () {
+    function Toast() {
+    }
+    /**
+     * Show a native toast for the given duration at the specified position.
+     *
+     * @param {string} message  The message to display.
+     * @param {string} duration  Duration to show the toast, either 'short', 'long' or any number of milliseconds: '1500'.
+     * @param {string} position  Where to position the toast, either 'top', 'center', or 'bottom'.
+     * @return {Observable}  Returns an Observable that notifies first on success and then when tapped, rejects on error.
+     */
+    Toast.show = function (message, duration, position) { return; };
+    /**
+     * Manually hide any currently visible toast.
+     * @return {Promise} Returns a Promise that resolves on success.
+     */
+    Toast.hide = function () { return; };
+    /**
+     * Show a native toast with the given options.
+     *
+     * @param {Object} options  Options for showing a toast. Available options:
+     *   message  The message to display.
+     *   duration  Duration to show the toast, either 'short', 'long' or any number of milliseconds: '1500'.
+     *   position  Where to position the toast, either 'top', 'center', or 'bottom'.
+     *   addPixelsY  Offset in pixels to move the toast up or down from its specified position.
+     *
+     * @return {Observable}  Returns an Observable that notifies first on success and then when tapped, rejects on error.
+     */
+    Toast.showWithOptions = function (options) { return; };
+    /**
+     * Shorthand for `show(message, 'short', 'top')`.
+     * @return {Observable}  Returns an Observable that notifies first on success and then when tapped, rejects on error.
+     */
+    Toast.showShortTop = function (message) { return; };
+    /**
+     * Shorthand for `show(message, 'short', 'center')`.
+     * @return {Observable}  Returns an Observable that notifies first on success and then when tapped, rejects on error.
+     */
+    Toast.showShortCenter = function (message) { return; };
+    /**
+     * Shorthand for `show(message, 'short', 'bottom')`.
+     * @return {Observable}  Returns an Observable that notifies first on success and then when tapped, rejects on error.
+     */
+    Toast.showShortBottom = function (message) { return; };
+    /**
+     * Shorthand for `show(message, 'long', 'top')`.
+     * @return {Observable}  Returns an Observable that notifies first on success and then when tapped, rejects on error.
+     */
+    Toast.showLongTop = function (message) { return; };
+    /**
+     * Shorthand for `show(message, 'long', 'center')`.
+     * @return {Observable}  Returns an Observable that notifies first on success and then when tapped, rejects on error.
+     */
+    Toast.showLongCenter = function (message) { return; };
+    /**
+     * Shorthand for `show(message, 'long', 'bottom')`.
+     * @return {Observable}  Returns an Observable that notifies first on success and then when tapped, rejects on error.
+     */
+    Toast.showLongBottom = function (message) { return; };
+    __decorate([
+        plugin_1.Cordova({
+            observable: true,
+            clearFunction: 'hide'
+        })
+    ], Toast, "show", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], Toast, "hide", null);
+    __decorate([
+        plugin_1.Cordova({
+            observable: true,
+            clearFunction: 'hide'
+        })
+    ], Toast, "showWithOptions", null);
+    __decorate([
+        plugin_1.Cordova({
+            observable: true,
+            clearFunction: 'hide'
+        })
+    ], Toast, "showShortTop", null);
+    __decorate([
+        plugin_1.Cordova({
+            observable: true,
+            clearFunction: 'hide'
+        })
+    ], Toast, "showShortCenter", null);
+    __decorate([
+        plugin_1.Cordova({
+            observable: true,
+            clearFunction: 'hide'
+        })
+    ], Toast, "showShortBottom", null);
+    __decorate([
+        plugin_1.Cordova({
+            observable: true,
+            clearFunction: 'hide'
+        })
+    ], Toast, "showLongTop", null);
+    __decorate([
+        plugin_1.Cordova({
+            observable: true,
+            clearFunction: 'hide'
+        })
+    ], Toast, "showLongCenter", null);
+    __decorate([
+        plugin_1.Cordova({
+            observable: true,
+            clearFunction: 'hide'
+        })
+    ], Toast, "showLongBottom", null);
+    Toast = __decorate([
+        plugin_1.Plugin({
+            plugin: 'cordova-plugin-x-toast',
+            pluginRef: 'plugins.toast',
+            repo: 'https://github.com/EddyVerbruggen/Toast-PhoneGap-Plugin'
+        })
+    ], Toast);
+    return Toast;
+})();
+exports.Toast = Toast;
+
+},{"./plugin":399}],407:[function(require,module,exports){
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var plugin_1 = require('./plugin');
+/**
+ * @name TouchID
+ * @description
+ * Scan the fingerprint of a user with the TouchID sensor.
+ *
+ * Requires Cordova plugin: `cordova-plugin-touch-id`. For more info, please see the [TouchID plugin docs](https://github.com/EddyVerbruggen/cordova-plugin-touch-id).
+ *
+ * ### Error Codes
+ *
+ * The plugin will reject for various reasons. Your app will most likely need to respond to the cases differently.
+ *
+ * Here is a list of some of the error codes:
+ *
+ *  -  `-1` - Fingerprint scan failed more than 3 times
+ *  -  `-2` or `-128` - User tapped the 'Cancel' button
+ *  -  `-3` - User tapped the 'Enter Passcode' or 'Enter Password' button
+ *  -  `-4` - The scan was cancelled by the system (Home button for example)
+ *  -  `-6` - TouchID is not Available
+ *  -  `-8` - TouchID is locked out from too many tries
+ * @usage
+ * ```js
+ * import {TouchID} from 'ionic-native';
+ *
+ *
+ *
+ * ```
+ */
+var TouchID = (function () {
+    function TouchID() {
+    }
+    /**
+     * Whether TouchID is available or not.
+     *
+     * @return {Promise} Returns a Promise that resolves if yes, rejects if no.
+     */
+    TouchID.prototype.isAvailable = function () { return; };
+    /**
+     * Show TouchID dialog and wait for a fingerprint scan. If user taps 'Enter Password' button, brings up standard system passcode screen.
+     *
+     * @param {string} message  The message to display
+     * @return {Promise} Returns a Promise the resolves if the fingerprint scan was successful, rejects with an error code (see above).
+     */
+    TouchID.verifyFingerprint = function (message) { return; };
+    /**
+     * Show TouchID dialog and wait for a fingerprint scan. If user taps 'Enter Password' button, rejects with code '-3' (see above).
+     *
+     * @param {string} message  The message to display
+     * @return {Promise} Returns a Promise the resolves if the fingerprint scan was successful, rejects with an error code (see above).
+     */
+    TouchID.verifyFingerprintWithCustomPasswordFallback = function (message) { return; };
+    /**
+     * Show TouchID dialog with custom 'Enter Password' message and wait for a fingerprint scan. If user taps 'Enter Password' button, rejects with code '-3' (see above).
+     *
+     * @param {string} message  The message to display
+     * @param {string} enterPasswordLabel  Custom text for the 'Enter Password' button
+     * @return {Promise} Returns a Promise the resolves if the fingerprint scan was successful, rejects with an error code (see above).
+     */
+    TouchID.verifyFingerprintWithCustomPasswordFallbackAndEnterPasswordLabel = function (message, enterPasswordLabel) { return; };
+    __decorate([
+        plugin_1.Cordova()
+    ], TouchID.prototype, "isAvailable", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], TouchID, "verifyFingerprint", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], TouchID, "verifyFingerprintWithCustomPasswordFallback", null);
+    __decorate([
+        plugin_1.Cordova()
+    ], TouchID, "verifyFingerprintWithCustomPasswordFallbackAndEnterPasswordLabel", null);
+    TouchID = __decorate([
+        plugin_1.Plugin({
+            plugin: 'cordova-plugin-touch-id',
+            pluginRef: 'plugins.touchid',
+            repo: 'https://github.com/EddyVerbruggen/cordova-plugin-touch-id'
+        })
+    ], TouchID);
+    return TouchID;
+})();
+exports.TouchID = TouchID;
+
+},{"./plugin":399}],408:[function(require,module,exports){
+var __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {
+    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+    if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+    return c > 3 && r && Object.defineProperty(target, key, r), r;
+};
+var plugin_1 = require('./plugin');
+/**
+ * @name Vibration
+ * @description Vibrates the device
+ * @usage
+ * ```ts
+ * import {Vibration} from 'ionic-native';
+ *
+ *
+ *
+ * // Vibrate the device for a second
+ * Vibration.vibrate(1000);
+ *
+ * // Vibrate 2 seconds
+ * // Pause for 1 second
+ * // Vibrate for 2 seconds
+ * // Patterns work on Android and Windows only
+ * Vibration.vibrate([2000,1000,2000]);
+ *
+ * // Stop any current vibrations immediately
+ * // Works on Android and Windows only
+ * Vibration.vibrate(0);
+ * ```
+ */
+var Vibration = (function () {
+    function Vibration() {
+    }
+    /**
+     * Vibrates the device for given amount of time.
+     * @param time {Number|Array<Number>} Milliseconds to vibrate the device. If passed an array of numbers, it will define a vibration pattern. Pass 0 to stop any vibration immediately.
+     */
+    Vibration.vibrate = function (time) { };
+    __decorate([
+        plugin_1.Cordova({
+            sync: true
+        })
+    ], Vibration, "vibrate", null);
+    Vibration = __decorate([
+        plugin_1.Plugin({
+            plugin: 'cordova-plugin-vibration',
+            pluginRef: 'navigator.vibrate',
+            repo: 'https://github.com/apache/cordova-plugin-vibration'
+        })
+    ], Vibration);
+    return Vibration;
+})();
+exports.Vibration = Vibration;
+
+},{"./plugin":399}],409:[function(require,module,exports){
+function get(obj, path) {
+    for (var i = 0, path = path.split('.'), len = path.length; i < len; i++) {
+        if (!obj) {
+            return null;
+        }
+        obj = obj[path[i]];
+    }
+    return obj;
+}
+exports.get = get;
+;
+
+},{}],410:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -65312,7 +70611,7 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],366:[function(require,module,exports){
+},{}],411:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -65344,7 +70643,7 @@ var InnerSubscriber = (function (_super) {
 }(Subscriber_1.Subscriber));
 exports.InnerSubscriber = InnerSubscriber;
 
-},{"./Subscriber":374}],367:[function(require,module,exports){
+},{"./Subscriber":419}],412:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('./Observable');
 var Notification = (function () {
@@ -65412,7 +70711,7 @@ var Notification = (function () {
 }());
 exports.Notification = Notification;
 
-},{"./Observable":368}],368:[function(require,module,exports){
+},{"./Observable":413}],413:[function(require,module,exports){
 "use strict";
 var root_1 = require('./util/root');
 var SymbolShim_1 = require('./util/SymbolShim');
@@ -65537,7 +70836,7 @@ var Observable = (function () {
 }());
 exports.Observable = Observable;
 
-},{"./util/SymbolShim":603,"./util/errorObject":604,"./util/root":614,"./util/toSubscriber":617,"./util/tryCatch":618}],369:[function(require,module,exports){
+},{"./util/SymbolShim":648,"./util/errorObject":649,"./util/root":659,"./util/toSubscriber":662,"./util/tryCatch":663}],414:[function(require,module,exports){
 "use strict";
 exports.empty = {
     isUnsubscribed: true,
@@ -65546,7 +70845,7 @@ exports.empty = {
     complete: function () { }
 };
 
-},{}],370:[function(require,module,exports){
+},{}],415:[function(require,module,exports){
 "use strict";
 var Subscriber_1 = require('./Subscriber');
 var Operator = (function () {
@@ -65559,7 +70858,7 @@ var Operator = (function () {
 }());
 exports.Operator = Operator;
 
-},{"./Subscriber":374}],371:[function(require,module,exports){
+},{"./Subscriber":419}],416:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -65585,7 +70884,7 @@ var OuterSubscriber = (function (_super) {
 }(Subscriber_1.Subscriber));
 exports.OuterSubscriber = OuterSubscriber;
 
-},{"./Subscriber":374}],372:[function(require,module,exports){
+},{"./Subscriber":419}],417:[function(require,module,exports){
 "use strict";
 /* tslint:disable:no-unused-variable */
 // Subject imported before Observable to bypass circular dependency issue since
@@ -65743,7 +71042,7 @@ var Symbol = {
 exports.Symbol = Symbol;
 /* tslint:enable:no-var-keyword */
 
-},{"./Notification":367,"./Observable":368,"./Operator":370,"./Subject":373,"./Subscriber":374,"./Subscription":375,"./add/observable/bindCallback":376,"./add/observable/bindNodeCallback":377,"./add/observable/combineLatest":378,"./add/observable/concat":379,"./add/observable/defer":380,"./add/observable/empty":381,"./add/observable/forkJoin":382,"./add/observable/from":383,"./add/observable/fromArray":384,"./add/observable/fromEvent":385,"./add/observable/fromEventPattern":386,"./add/observable/fromPromise":387,"./add/observable/interval":388,"./add/observable/merge":389,"./add/observable/never":390,"./add/observable/race":391,"./add/observable/range":392,"./add/observable/throw":393,"./add/observable/timer":394,"./add/observable/zip":395,"./add/operator/buffer":396,"./add/operator/bufferCount":397,"./add/operator/bufferTime":398,"./add/operator/bufferToggle":399,"./add/operator/bufferWhen":400,"./add/operator/cache":401,"./add/operator/catch":402,"./add/operator/combineAll":403,"./add/operator/combineLatest":404,"./add/operator/concat":405,"./add/operator/concatAll":406,"./add/operator/concatMap":407,"./add/operator/concatMapTo":408,"./add/operator/count":409,"./add/operator/debounce":410,"./add/operator/debounceTime":411,"./add/operator/defaultIfEmpty":412,"./add/operator/delay":413,"./add/operator/delayWhen":414,"./add/operator/dematerialize":415,"./add/operator/distinctUntilChanged":416,"./add/operator/do":417,"./add/operator/every":418,"./add/operator/expand":419,"./add/operator/filter":420,"./add/operator/finally":421,"./add/operator/first":422,"./add/operator/groupBy":423,"./add/operator/ignoreElements":424,"./add/operator/inspect":425,"./add/operator/inspectTime":426,"./add/operator/last":427,"./add/operator/let":428,"./add/operator/map":429,"./add/operator/mapTo":430,"./add/operator/materialize":431,"./add/operator/merge":432,"./add/operator/mergeAll":433,"./add/operator/mergeMap":434,"./add/operator/mergeMapTo":435,"./add/operator/multicast":436,"./add/operator/observeOn":437,"./add/operator/partition":438,"./add/operator/pluck":439,"./add/operator/publish":440,"./add/operator/publishBehavior":441,"./add/operator/publishLast":442,"./add/operator/publishReplay":443,"./add/operator/race":444,"./add/operator/reduce":445,"./add/operator/repeat":446,"./add/operator/retry":447,"./add/operator/retryWhen":448,"./add/operator/sample":449,"./add/operator/sampleTime":450,"./add/operator/scan":451,"./add/operator/share":452,"./add/operator/single":453,"./add/operator/skip":454,"./add/operator/skipUntil":455,"./add/operator/skipWhile":456,"./add/operator/startWith":457,"./add/operator/subscribeOn":458,"./add/operator/switch":459,"./add/operator/switchMap":460,"./add/operator/switchMapTo":461,"./add/operator/take":462,"./add/operator/takeLast":463,"./add/operator/takeUntil":464,"./add/operator/takeWhile":465,"./add/operator/throttle":466,"./add/operator/throttleTime":467,"./add/operator/timeout":468,"./add/operator/timeoutWith":469,"./add/operator/toArray":470,"./add/operator/toPromise":471,"./add/operator/window":472,"./add/operator/windowCount":473,"./add/operator/windowTime":474,"./add/operator/windowToggle":475,"./add/operator/windowWhen":476,"./add/operator/withLatestFrom":477,"./add/operator/zip":478,"./add/operator/zipAll":479,"./observable/ConnectableObservable":484,"./scheduler/asap":589,"./scheduler/queue":590,"./subject/AsyncSubject":591,"./subject/BehaviorSubject":592,"./subject/ReplaySubject":593,"./symbol/rxSubscriber":595,"./util/ArgumentOutOfRangeError":596,"./util/EmptyError":597,"./util/ObjectUnsubscribedError":602}],373:[function(require,module,exports){
+},{"./Notification":412,"./Observable":413,"./Operator":415,"./Subject":418,"./Subscriber":419,"./Subscription":420,"./add/observable/bindCallback":421,"./add/observable/bindNodeCallback":422,"./add/observable/combineLatest":423,"./add/observable/concat":424,"./add/observable/defer":425,"./add/observable/empty":426,"./add/observable/forkJoin":427,"./add/observable/from":428,"./add/observable/fromArray":429,"./add/observable/fromEvent":430,"./add/observable/fromEventPattern":431,"./add/observable/fromPromise":432,"./add/observable/interval":433,"./add/observable/merge":434,"./add/observable/never":435,"./add/observable/race":436,"./add/observable/range":437,"./add/observable/throw":438,"./add/observable/timer":439,"./add/observable/zip":440,"./add/operator/buffer":441,"./add/operator/bufferCount":442,"./add/operator/bufferTime":443,"./add/operator/bufferToggle":444,"./add/operator/bufferWhen":445,"./add/operator/cache":446,"./add/operator/catch":447,"./add/operator/combineAll":448,"./add/operator/combineLatest":449,"./add/operator/concat":450,"./add/operator/concatAll":451,"./add/operator/concatMap":452,"./add/operator/concatMapTo":453,"./add/operator/count":454,"./add/operator/debounce":455,"./add/operator/debounceTime":456,"./add/operator/defaultIfEmpty":457,"./add/operator/delay":458,"./add/operator/delayWhen":459,"./add/operator/dematerialize":460,"./add/operator/distinctUntilChanged":461,"./add/operator/do":462,"./add/operator/every":463,"./add/operator/expand":464,"./add/operator/filter":465,"./add/operator/finally":466,"./add/operator/first":467,"./add/operator/groupBy":468,"./add/operator/ignoreElements":469,"./add/operator/inspect":470,"./add/operator/inspectTime":471,"./add/operator/last":472,"./add/operator/let":473,"./add/operator/map":474,"./add/operator/mapTo":475,"./add/operator/materialize":476,"./add/operator/merge":477,"./add/operator/mergeAll":478,"./add/operator/mergeMap":479,"./add/operator/mergeMapTo":480,"./add/operator/multicast":481,"./add/operator/observeOn":482,"./add/operator/partition":483,"./add/operator/pluck":484,"./add/operator/publish":485,"./add/operator/publishBehavior":486,"./add/operator/publishLast":487,"./add/operator/publishReplay":488,"./add/operator/race":489,"./add/operator/reduce":490,"./add/operator/repeat":491,"./add/operator/retry":492,"./add/operator/retryWhen":493,"./add/operator/sample":494,"./add/operator/sampleTime":495,"./add/operator/scan":496,"./add/operator/share":497,"./add/operator/single":498,"./add/operator/skip":499,"./add/operator/skipUntil":500,"./add/operator/skipWhile":501,"./add/operator/startWith":502,"./add/operator/subscribeOn":503,"./add/operator/switch":504,"./add/operator/switchMap":505,"./add/operator/switchMapTo":506,"./add/operator/take":507,"./add/operator/takeLast":508,"./add/operator/takeUntil":509,"./add/operator/takeWhile":510,"./add/operator/throttle":511,"./add/operator/throttleTime":512,"./add/operator/timeout":513,"./add/operator/timeoutWith":514,"./add/operator/toArray":515,"./add/operator/toPromise":516,"./add/operator/window":517,"./add/operator/windowCount":518,"./add/operator/windowTime":519,"./add/operator/windowToggle":520,"./add/operator/windowWhen":521,"./add/operator/withLatestFrom":522,"./add/operator/zip":523,"./add/operator/zipAll":524,"./observable/ConnectableObservable":529,"./scheduler/asap":634,"./scheduler/queue":635,"./subject/AsyncSubject":636,"./subject/BehaviorSubject":637,"./subject/ReplaySubject":638,"./symbol/rxSubscriber":640,"./util/ArgumentOutOfRangeError":641,"./util/EmptyError":642,"./util/ObjectUnsubscribedError":647}],418:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -65941,7 +71240,7 @@ var SubjectObservable = (function (_super) {
     return SubjectObservable;
 }(Observable_1.Observable));
 
-},{"./Observable":368,"./Subscriber":374,"./Subscription":375,"./subject/SubjectSubscription":594,"./symbol/rxSubscriber":595,"./util/ObjectUnsubscribedError":602,"./util/throwError":616}],374:[function(require,module,exports){
+},{"./Observable":413,"./Subscriber":419,"./Subscription":420,"./subject/SubjectSubscription":639,"./symbol/rxSubscriber":640,"./util/ObjectUnsubscribedError":647,"./util/throwError":661}],419:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -66134,7 +71433,7 @@ var SafeSubscriber = (function (_super) {
     return SafeSubscriber;
 }(Subscriber));
 
-},{"./Observer":369,"./Subscription":375,"./symbol/rxSubscriber":595,"./util/isFunction":607}],375:[function(require,module,exports){
+},{"./Observer":414,"./Subscription":420,"./symbol/rxSubscriber":640,"./util/isFunction":652}],420:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -66255,302 +71554,302 @@ var UnsubscriptionError = (function (_super) {
 }(Error));
 exports.UnsubscriptionError = UnsubscriptionError;
 
-},{"./util/errorObject":604,"./util/isArray":605,"./util/isFunction":607,"./util/isObject":609,"./util/tryCatch":618}],376:[function(require,module,exports){
+},{"./util/errorObject":649,"./util/isArray":650,"./util/isFunction":652,"./util/isObject":654,"./util/tryCatch":663}],421:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var BoundCallbackObservable_1 = require('../../observable/BoundCallbackObservable');
 Observable_1.Observable.bindCallback = BoundCallbackObservable_1.BoundCallbackObservable.create;
 
-},{"../../Observable":368,"../../observable/BoundCallbackObservable":482}],377:[function(require,module,exports){
+},{"../../Observable":413,"../../observable/BoundCallbackObservable":527}],422:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var BoundNodeCallbackObservable_1 = require('../../observable/BoundNodeCallbackObservable');
 Observable_1.Observable.bindNodeCallback = BoundNodeCallbackObservable_1.BoundNodeCallbackObservable.create;
 
-},{"../../Observable":368,"../../observable/BoundNodeCallbackObservable":483}],378:[function(require,module,exports){
+},{"../../Observable":413,"../../observable/BoundNodeCallbackObservable":528}],423:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var combineLatest_1 = require('../../operator/combineLatest');
 Observable_1.Observable.combineLatest = combineLatest_1.combineLatestStatic;
 
-},{"../../Observable":368,"../../operator/combineLatest":508}],379:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/combineLatest":553}],424:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var concat_1 = require('../../operator/concat');
 Observable_1.Observable.concat = concat_1.concatStatic;
 
-},{"../../Observable":368,"../../operator/concat":509}],380:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/concat":554}],425:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var DeferObservable_1 = require('../../observable/DeferObservable');
 Observable_1.Observable.defer = DeferObservable_1.DeferObservable.create;
 
-},{"../../Observable":368,"../../observable/DeferObservable":485}],381:[function(require,module,exports){
+},{"../../Observable":413,"../../observable/DeferObservable":530}],426:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var EmptyObservable_1 = require('../../observable/EmptyObservable');
 Observable_1.Observable.empty = EmptyObservable_1.EmptyObservable.create;
 
-},{"../../Observable":368,"../../observable/EmptyObservable":486}],382:[function(require,module,exports){
+},{"../../Observable":413,"../../observable/EmptyObservable":531}],427:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var ForkJoinObservable_1 = require('../../observable/ForkJoinObservable');
 Observable_1.Observable.forkJoin = ForkJoinObservable_1.ForkJoinObservable.create;
 
-},{"../../Observable":368,"../../observable/ForkJoinObservable":488}],383:[function(require,module,exports){
+},{"../../Observable":413,"../../observable/ForkJoinObservable":533}],428:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var FromObservable_1 = require('../../observable/FromObservable');
 Observable_1.Observable.from = FromObservable_1.FromObservable.create;
 
-},{"../../Observable":368,"../../observable/FromObservable":491}],384:[function(require,module,exports){
+},{"../../Observable":413,"../../observable/FromObservable":536}],429:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var ArrayObservable_1 = require('../../observable/ArrayObservable');
 Observable_1.Observable.fromArray = ArrayObservable_1.ArrayObservable.create;
 Observable_1.Observable.of = ArrayObservable_1.ArrayObservable.of;
 
-},{"../../Observable":368,"../../observable/ArrayObservable":481}],385:[function(require,module,exports){
+},{"../../Observable":413,"../../observable/ArrayObservable":526}],430:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var FromEventObservable_1 = require('../../observable/FromEventObservable');
 Observable_1.Observable.fromEvent = FromEventObservable_1.FromEventObservable.create;
 
-},{"../../Observable":368,"../../observable/FromEventObservable":489}],386:[function(require,module,exports){
+},{"../../Observable":413,"../../observable/FromEventObservable":534}],431:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var FromEventPatternObservable_1 = require('../../observable/FromEventPatternObservable');
 Observable_1.Observable.fromEventPattern = FromEventPatternObservable_1.FromEventPatternObservable.create;
 
-},{"../../Observable":368,"../../observable/FromEventPatternObservable":490}],387:[function(require,module,exports){
+},{"../../Observable":413,"../../observable/FromEventPatternObservable":535}],432:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var PromiseObservable_1 = require('../../observable/PromiseObservable');
 Observable_1.Observable.fromPromise = PromiseObservable_1.PromiseObservable.create;
 
-},{"../../Observable":368,"../../observable/PromiseObservable":495}],388:[function(require,module,exports){
+},{"../../Observable":413,"../../observable/PromiseObservable":540}],433:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var IntervalObservable_1 = require('../../observable/IntervalObservable');
 Observable_1.Observable.interval = IntervalObservable_1.IntervalObservable.create;
 
-},{"../../Observable":368,"../../observable/IntervalObservable":492}],389:[function(require,module,exports){
+},{"../../Observable":413,"../../observable/IntervalObservable":537}],434:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var merge_1 = require('../../operator/merge');
 Observable_1.Observable.merge = merge_1.mergeStatic;
 
-},{"../../Observable":368,"../../operator/merge":536}],390:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/merge":581}],435:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var NeverObservable_1 = require('../../observable/NeverObservable');
 Observable_1.Observable.never = NeverObservable_1.NeverObservable.create;
 
-},{"../../Observable":368,"../../observable/NeverObservable":494}],391:[function(require,module,exports){
+},{"../../Observable":413,"../../observable/NeverObservable":539}],436:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var race_1 = require('../../operator/race');
 Observable_1.Observable.race = race_1.raceStatic;
 
-},{"../../Observable":368,"../../operator/race":548}],392:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/race":593}],437:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var RangeObservable_1 = require('../../observable/RangeObservable');
 Observable_1.Observable.range = RangeObservable_1.RangeObservable.create;
 
-},{"../../Observable":368,"../../observable/RangeObservable":496}],393:[function(require,module,exports){
+},{"../../Observable":413,"../../observable/RangeObservable":541}],438:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var ErrorObservable_1 = require('../../observable/ErrorObservable');
 Observable_1.Observable.throw = ErrorObservable_1.ErrorObservable.create;
 
-},{"../../Observable":368,"../../observable/ErrorObservable":487}],394:[function(require,module,exports){
+},{"../../Observable":413,"../../observable/ErrorObservable":532}],439:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var TimerObservable_1 = require('../../observable/TimerObservable');
 Observable_1.Observable.timer = TimerObservable_1.TimerObservable.create;
 
-},{"../../Observable":368,"../../observable/TimerObservable":499}],395:[function(require,module,exports){
+},{"../../Observable":413,"../../observable/TimerObservable":544}],440:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var zip_1 = require('../../operator/zip');
 Observable_1.Observable.zip = zip_1.zipStatic;
 
-},{"../../Observable":368,"../../operator/zip":582}],396:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/zip":627}],441:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var buffer_1 = require('../../operator/buffer');
 Observable_1.Observable.prototype.buffer = buffer_1.buffer;
 
-},{"../../Observable":368,"../../operator/buffer":500}],397:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/buffer":545}],442:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var bufferCount_1 = require('../../operator/bufferCount');
 Observable_1.Observable.prototype.bufferCount = bufferCount_1.bufferCount;
 
-},{"../../Observable":368,"../../operator/bufferCount":501}],398:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/bufferCount":546}],443:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var bufferTime_1 = require('../../operator/bufferTime');
 Observable_1.Observable.prototype.bufferTime = bufferTime_1.bufferTime;
 
-},{"../../Observable":368,"../../operator/bufferTime":502}],399:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/bufferTime":547}],444:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var bufferToggle_1 = require('../../operator/bufferToggle');
 Observable_1.Observable.prototype.bufferToggle = bufferToggle_1.bufferToggle;
 
-},{"../../Observable":368,"../../operator/bufferToggle":503}],400:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/bufferToggle":548}],445:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var bufferWhen_1 = require('../../operator/bufferWhen');
 Observable_1.Observable.prototype.bufferWhen = bufferWhen_1.bufferWhen;
 
-},{"../../Observable":368,"../../operator/bufferWhen":504}],401:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/bufferWhen":549}],446:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var cache_1 = require('../../operator/cache');
 Observable_1.Observable.prototype.cache = cache_1.cache;
 
-},{"../../Observable":368,"../../operator/cache":505}],402:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/cache":550}],447:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var catch_1 = require('../../operator/catch');
 Observable_1.Observable.prototype.catch = catch_1._catch;
 
-},{"../../Observable":368,"../../operator/catch":506}],403:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/catch":551}],448:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var combineAll_1 = require('../../operator/combineAll');
 Observable_1.Observable.prototype.combineAll = combineAll_1.combineAll;
 
-},{"../../Observable":368,"../../operator/combineAll":507}],404:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/combineAll":552}],449:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var combineLatest_1 = require('../../operator/combineLatest');
 Observable_1.Observable.prototype.combineLatest = combineLatest_1.combineLatest;
 
-},{"../../Observable":368,"../../operator/combineLatest":508}],405:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/combineLatest":553}],450:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var concat_1 = require('../../operator/concat');
 Observable_1.Observable.prototype.concat = concat_1.concat;
 
-},{"../../Observable":368,"../../operator/concat":509}],406:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/concat":554}],451:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var concatAll_1 = require('../../operator/concatAll');
 Observable_1.Observable.prototype.concatAll = concatAll_1.concatAll;
 
-},{"../../Observable":368,"../../operator/concatAll":510}],407:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/concatAll":555}],452:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var concatMap_1 = require('../../operator/concatMap');
 Observable_1.Observable.prototype.concatMap = concatMap_1.concatMap;
 
-},{"../../Observable":368,"../../operator/concatMap":511}],408:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/concatMap":556}],453:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var concatMapTo_1 = require('../../operator/concatMapTo');
 Observable_1.Observable.prototype.concatMapTo = concatMapTo_1.concatMapTo;
 
-},{"../../Observable":368,"../../operator/concatMapTo":512}],409:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/concatMapTo":557}],454:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var count_1 = require('../../operator/count');
 Observable_1.Observable.prototype.count = count_1.count;
 
-},{"../../Observable":368,"../../operator/count":513}],410:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/count":558}],455:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var debounce_1 = require('../../operator/debounce');
 Observable_1.Observable.prototype.debounce = debounce_1.debounce;
 
-},{"../../Observable":368,"../../operator/debounce":514}],411:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/debounce":559}],456:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var debounceTime_1 = require('../../operator/debounceTime');
 Observable_1.Observable.prototype.debounceTime = debounceTime_1.debounceTime;
 
-},{"../../Observable":368,"../../operator/debounceTime":515}],412:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/debounceTime":560}],457:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var defaultIfEmpty_1 = require('../../operator/defaultIfEmpty');
 Observable_1.Observable.prototype.defaultIfEmpty = defaultIfEmpty_1.defaultIfEmpty;
 
-},{"../../Observable":368,"../../operator/defaultIfEmpty":516}],413:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/defaultIfEmpty":561}],458:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var delay_1 = require('../../operator/delay');
 Observable_1.Observable.prototype.delay = delay_1.delay;
 
-},{"../../Observable":368,"../../operator/delay":517}],414:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/delay":562}],459:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var delayWhen_1 = require('../../operator/delayWhen');
 Observable_1.Observable.prototype.delayWhen = delayWhen_1.delayWhen;
 
-},{"../../Observable":368,"../../operator/delayWhen":518}],415:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/delayWhen":563}],460:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var dematerialize_1 = require('../../operator/dematerialize');
 Observable_1.Observable.prototype.dematerialize = dematerialize_1.dematerialize;
 
-},{"../../Observable":368,"../../operator/dematerialize":519}],416:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/dematerialize":564}],461:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var distinctUntilChanged_1 = require('../../operator/distinctUntilChanged');
 Observable_1.Observable.prototype.distinctUntilChanged = distinctUntilChanged_1.distinctUntilChanged;
 
-},{"../../Observable":368,"../../operator/distinctUntilChanged":520}],417:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/distinctUntilChanged":565}],462:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var do_1 = require('../../operator/do');
 Observable_1.Observable.prototype.do = do_1._do;
 
-},{"../../Observable":368,"../../operator/do":521}],418:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/do":566}],463:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var every_1 = require('../../operator/every');
 Observable_1.Observable.prototype.every = every_1.every;
 
-},{"../../Observable":368,"../../operator/every":522}],419:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/every":567}],464:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var expand_1 = require('../../operator/expand');
 Observable_1.Observable.prototype.expand = expand_1.expand;
 
-},{"../../Observable":368,"../../operator/expand":523}],420:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/expand":568}],465:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var filter_1 = require('../../operator/filter');
 Observable_1.Observable.prototype.filter = filter_1.filter;
 
-},{"../../Observable":368,"../../operator/filter":524}],421:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/filter":569}],466:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var finally_1 = require('../../operator/finally');
 Observable_1.Observable.prototype.finally = finally_1._finally;
 
-},{"../../Observable":368,"../../operator/finally":525}],422:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/finally":570}],467:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var first_1 = require('../../operator/first');
 Observable_1.Observable.prototype.first = first_1.first;
 
-},{"../../Observable":368,"../../operator/first":526}],423:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/first":571}],468:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var groupBy_1 = require('../../operator/groupBy');
 Observable_1.Observable.prototype.groupBy = groupBy_1.groupBy;
 
-},{"../../Observable":368,"../../operator/groupBy":527}],424:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/groupBy":572}],469:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var ignoreElements_1 = require('../../operator/ignoreElements');
 Observable_1.Observable.prototype.ignoreElements = ignoreElements_1.ignoreElements;
 
-},{"../../Observable":368,"../../operator/ignoreElements":528}],425:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/ignoreElements":573}],470:[function(require,module,exports){
 "use strict";
 /**
  * Everything in this file is generated by the 'tools/generate-operator-patches.ts' script.
@@ -66560,7 +71859,7 @@ var Observable_1 = require('../../Observable');
 var inspect_1 = require('../../operator/inspect');
 Observable_1.Observable.prototype.inspect = inspect_1.inspect;
 
-},{"../../Observable":368,"../../operator/inspect":529}],426:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/inspect":574}],471:[function(require,module,exports){
 "use strict";
 /**
  * Everything in this file is generated by the 'tools/generate-operator-patches.ts' script.
@@ -66570,225 +71869,225 @@ var Observable_1 = require('../../Observable');
 var inspectTime_1 = require('../../operator/inspectTime');
 Observable_1.Observable.prototype.inspectTime = inspectTime_1.inspectTime;
 
-},{"../../Observable":368,"../../operator/inspectTime":530}],427:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/inspectTime":575}],472:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var last_1 = require('../../operator/last');
 Observable_1.Observable.prototype.last = last_1.last;
 
-},{"../../Observable":368,"../../operator/last":531}],428:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/last":576}],473:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var let_1 = require('../../operator/let');
 Observable_1.Observable.prototype.let = let_1.letProto;
 Observable_1.Observable.prototype.letBind = let_1.letProto;
 
-},{"../../Observable":368,"../../operator/let":532}],429:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/let":577}],474:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var map_1 = require('../../operator/map');
 Observable_1.Observable.prototype.map = map_1.map;
 
-},{"../../Observable":368,"../../operator/map":533}],430:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/map":578}],475:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var mapTo_1 = require('../../operator/mapTo');
 Observable_1.Observable.prototype.mapTo = mapTo_1.mapTo;
 
-},{"../../Observable":368,"../../operator/mapTo":534}],431:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/mapTo":579}],476:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var materialize_1 = require('../../operator/materialize');
 Observable_1.Observable.prototype.materialize = materialize_1.materialize;
 
-},{"../../Observable":368,"../../operator/materialize":535}],432:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/materialize":580}],477:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var merge_1 = require('../../operator/merge');
 Observable_1.Observable.prototype.merge = merge_1.merge;
 
-},{"../../Observable":368,"../../operator/merge":536}],433:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/merge":581}],478:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var mergeAll_1 = require('../../operator/mergeAll');
 Observable_1.Observable.prototype.mergeAll = mergeAll_1.mergeAll;
 
-},{"../../Observable":368,"../../operator/mergeAll":537}],434:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/mergeAll":582}],479:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var mergeMap_1 = require('../../operator/mergeMap');
 Observable_1.Observable.prototype.mergeMap = mergeMap_1.mergeMap;
 Observable_1.Observable.prototype.flatMap = mergeMap_1.mergeMap;
 
-},{"../../Observable":368,"../../operator/mergeMap":538}],435:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/mergeMap":583}],480:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var mergeMapTo_1 = require('../../operator/mergeMapTo');
 Observable_1.Observable.prototype.mergeMapTo = mergeMapTo_1.mergeMapTo;
 
-},{"../../Observable":368,"../../operator/mergeMapTo":539}],436:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/mergeMapTo":584}],481:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var multicast_1 = require('../../operator/multicast');
 Observable_1.Observable.prototype.multicast = multicast_1.multicast;
 
-},{"../../Observable":368,"../../operator/multicast":540}],437:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/multicast":585}],482:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var observeOn_1 = require('../../operator/observeOn');
 Observable_1.Observable.prototype.observeOn = observeOn_1.observeOn;
 
-},{"../../Observable":368,"../../operator/observeOn":541}],438:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/observeOn":586}],483:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var partition_1 = require('../../operator/partition');
 Observable_1.Observable.prototype.partition = partition_1.partition;
 
-},{"../../Observable":368,"../../operator/partition":542}],439:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/partition":587}],484:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var pluck_1 = require('../../operator/pluck');
 Observable_1.Observable.prototype.pluck = pluck_1.pluck;
 
-},{"../../Observable":368,"../../operator/pluck":543}],440:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/pluck":588}],485:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var publish_1 = require('../../operator/publish');
 Observable_1.Observable.prototype.publish = publish_1.publish;
 
-},{"../../Observable":368,"../../operator/publish":544}],441:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/publish":589}],486:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var publishBehavior_1 = require('../../operator/publishBehavior');
 Observable_1.Observable.prototype.publishBehavior = publishBehavior_1.publishBehavior;
 
-},{"../../Observable":368,"../../operator/publishBehavior":545}],442:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/publishBehavior":590}],487:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var publishLast_1 = require('../../operator/publishLast');
 Observable_1.Observable.prototype.publishLast = publishLast_1.publishLast;
 
-},{"../../Observable":368,"../../operator/publishLast":546}],443:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/publishLast":591}],488:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var publishReplay_1 = require('../../operator/publishReplay');
 Observable_1.Observable.prototype.publishReplay = publishReplay_1.publishReplay;
 
-},{"../../Observable":368,"../../operator/publishReplay":547}],444:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/publishReplay":592}],489:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var race_1 = require('../../operator/race');
 Observable_1.Observable.prototype.race = race_1.race;
 
-},{"../../Observable":368,"../../operator/race":548}],445:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/race":593}],490:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var reduce_1 = require('../../operator/reduce');
 Observable_1.Observable.prototype.reduce = reduce_1.reduce;
 
-},{"../../Observable":368,"../../operator/reduce":549}],446:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/reduce":594}],491:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var repeat_1 = require('../../operator/repeat');
 Observable_1.Observable.prototype.repeat = repeat_1.repeat;
 
-},{"../../Observable":368,"../../operator/repeat":550}],447:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/repeat":595}],492:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var retry_1 = require('../../operator/retry');
 Observable_1.Observable.prototype.retry = retry_1.retry;
 
-},{"../../Observable":368,"../../operator/retry":551}],448:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/retry":596}],493:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var retryWhen_1 = require('../../operator/retryWhen');
 Observable_1.Observable.prototype.retryWhen = retryWhen_1.retryWhen;
 
-},{"../../Observable":368,"../../operator/retryWhen":552}],449:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/retryWhen":597}],494:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var sample_1 = require('../../operator/sample');
 Observable_1.Observable.prototype.sample = sample_1.sample;
 
-},{"../../Observable":368,"../../operator/sample":553}],450:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/sample":598}],495:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var sampleTime_1 = require('../../operator/sampleTime');
 Observable_1.Observable.prototype.sampleTime = sampleTime_1.sampleTime;
 
-},{"../../Observable":368,"../../operator/sampleTime":554}],451:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/sampleTime":599}],496:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var scan_1 = require('../../operator/scan');
 Observable_1.Observable.prototype.scan = scan_1.scan;
 
-},{"../../Observable":368,"../../operator/scan":555}],452:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/scan":600}],497:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var share_1 = require('../../operator/share');
 Observable_1.Observable.prototype.share = share_1.share;
 
-},{"../../Observable":368,"../../operator/share":556}],453:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/share":601}],498:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var single_1 = require('../../operator/single');
 Observable_1.Observable.prototype.single = single_1.single;
 
-},{"../../Observable":368,"../../operator/single":557}],454:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/single":602}],499:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var skip_1 = require('../../operator/skip');
 Observable_1.Observable.prototype.skip = skip_1.skip;
 
-},{"../../Observable":368,"../../operator/skip":558}],455:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/skip":603}],500:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var skipUntil_1 = require('../../operator/skipUntil');
 Observable_1.Observable.prototype.skipUntil = skipUntil_1.skipUntil;
 
-},{"../../Observable":368,"../../operator/skipUntil":559}],456:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/skipUntil":604}],501:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var skipWhile_1 = require('../../operator/skipWhile');
 Observable_1.Observable.prototype.skipWhile = skipWhile_1.skipWhile;
 
-},{"../../Observable":368,"../../operator/skipWhile":560}],457:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/skipWhile":605}],502:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var startWith_1 = require('../../operator/startWith');
 Observable_1.Observable.prototype.startWith = startWith_1.startWith;
 
-},{"../../Observable":368,"../../operator/startWith":561}],458:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/startWith":606}],503:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var subscribeOn_1 = require('../../operator/subscribeOn');
 Observable_1.Observable.prototype.subscribeOn = subscribeOn_1.subscribeOn;
 
-},{"../../Observable":368,"../../operator/subscribeOn":562}],459:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/subscribeOn":607}],504:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var switch_1 = require('../../operator/switch');
 Observable_1.Observable.prototype.switch = switch_1._switch;
 
-},{"../../Observable":368,"../../operator/switch":563}],460:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/switch":608}],505:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var switchMap_1 = require('../../operator/switchMap');
 Observable_1.Observable.prototype.switchMap = switchMap_1.switchMap;
 
-},{"../../Observable":368,"../../operator/switchMap":564}],461:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/switchMap":609}],506:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var switchMapTo_1 = require('../../operator/switchMapTo');
 Observable_1.Observable.prototype.switchMapTo = switchMapTo_1.switchMapTo;
 
-},{"../../Observable":368,"../../operator/switchMapTo":565}],462:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/switchMapTo":610}],507:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var take_1 = require('../../operator/take');
 Observable_1.Observable.prototype.take = take_1.take;
 
-},{"../../Observable":368,"../../operator/take":566}],463:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/take":611}],508:[function(require,module,exports){
 "use strict";
 /**
  * Everything in this file is generated by the 'tools/generate-operator-patches.ts' script.
@@ -66798,103 +72097,103 @@ var Observable_1 = require('../../Observable');
 var takeLast_1 = require('../../operator/takeLast');
 Observable_1.Observable.prototype.takeLast = takeLast_1.takeLast;
 
-},{"../../Observable":368,"../../operator/takeLast":567}],464:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/takeLast":612}],509:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var takeUntil_1 = require('../../operator/takeUntil');
 Observable_1.Observable.prototype.takeUntil = takeUntil_1.takeUntil;
 
-},{"../../Observable":368,"../../operator/takeUntil":568}],465:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/takeUntil":613}],510:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var takeWhile_1 = require('../../operator/takeWhile');
 Observable_1.Observable.prototype.takeWhile = takeWhile_1.takeWhile;
 
-},{"../../Observable":368,"../../operator/takeWhile":569}],466:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/takeWhile":614}],511:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var throttle_1 = require('../../operator/throttle');
 Observable_1.Observable.prototype.throttle = throttle_1.throttle;
 
-},{"../../Observable":368,"../../operator/throttle":570}],467:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/throttle":615}],512:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var throttleTime_1 = require('../../operator/throttleTime');
 Observable_1.Observable.prototype.throttleTime = throttleTime_1.throttleTime;
 
-},{"../../Observable":368,"../../operator/throttleTime":571}],468:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/throttleTime":616}],513:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var timeout_1 = require('../../operator/timeout');
 Observable_1.Observable.prototype.timeout = timeout_1.timeout;
 
-},{"../../Observable":368,"../../operator/timeout":572}],469:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/timeout":617}],514:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var timeoutWith_1 = require('../../operator/timeoutWith');
 Observable_1.Observable.prototype.timeoutWith = timeoutWith_1.timeoutWith;
 
-},{"../../Observable":368,"../../operator/timeoutWith":573}],470:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/timeoutWith":618}],515:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var toArray_1 = require('../../operator/toArray');
 Observable_1.Observable.prototype.toArray = toArray_1.toArray;
 
-},{"../../Observable":368,"../../operator/toArray":574}],471:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/toArray":619}],516:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var toPromise_1 = require('../../operator/toPromise');
 Observable_1.Observable.prototype.toPromise = toPromise_1.toPromise;
 
-},{"../../Observable":368,"../../operator/toPromise":575}],472:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/toPromise":620}],517:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var window_1 = require('../../operator/window');
 Observable_1.Observable.prototype.window = window_1.window;
 
-},{"../../Observable":368,"../../operator/window":576}],473:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/window":621}],518:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var windowCount_1 = require('../../operator/windowCount');
 Observable_1.Observable.prototype.windowCount = windowCount_1.windowCount;
 
-},{"../../Observable":368,"../../operator/windowCount":577}],474:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/windowCount":622}],519:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var windowTime_1 = require('../../operator/windowTime');
 Observable_1.Observable.prototype.windowTime = windowTime_1.windowTime;
 
-},{"../../Observable":368,"../../operator/windowTime":578}],475:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/windowTime":623}],520:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var windowToggle_1 = require('../../operator/windowToggle');
 Observable_1.Observable.prototype.windowToggle = windowToggle_1.windowToggle;
 
-},{"../../Observable":368,"../../operator/windowToggle":579}],476:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/windowToggle":624}],521:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var windowWhen_1 = require('../../operator/windowWhen');
 Observable_1.Observable.prototype.windowWhen = windowWhen_1.windowWhen;
 
-},{"../../Observable":368,"../../operator/windowWhen":580}],477:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/windowWhen":625}],522:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var withLatestFrom_1 = require('../../operator/withLatestFrom');
 Observable_1.Observable.prototype.withLatestFrom = withLatestFrom_1.withLatestFrom;
 
-},{"../../Observable":368,"../../operator/withLatestFrom":581}],478:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/withLatestFrom":626}],523:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var zip_1 = require('../../operator/zip');
 Observable_1.Observable.prototype.zip = zip_1.zipProto;
 
-},{"../../Observable":368,"../../operator/zip":582}],479:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/zip":627}],524:[function(require,module,exports){
 "use strict";
 var Observable_1 = require('../../Observable');
 var zipAll_1 = require('../../operator/zipAll');
 Observable_1.Observable.prototype.zipAll = zipAll_1.zipAll;
 
-},{"../../Observable":368,"../../operator/zipAll":583}],480:[function(require,module,exports){
+},{"../../Observable":413,"../../operator/zipAll":628}],525:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -66965,7 +72264,7 @@ var ArrayLikeObservable = (function (_super) {
 }(Observable_1.Observable));
 exports.ArrayLikeObservable = ArrayLikeObservable;
 
-},{"../Observable":368,"./EmptyObservable":486,"./ScalarObservable":497}],481:[function(require,module,exports){
+},{"../Observable":413,"./EmptyObservable":531,"./ScalarObservable":542}],526:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -67047,7 +72346,7 @@ var ArrayObservable = (function (_super) {
 }(Observable_1.Observable));
 exports.ArrayObservable = ArrayObservable;
 
-},{"../Observable":368,"../util/isScheduler":611,"./EmptyObservable":486,"./ScalarObservable":497}],482:[function(require,module,exports){
+},{"../Observable":413,"../util/isScheduler":656,"./EmptyObservable":531,"./ScalarObservable":542}],527:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -67171,7 +72470,7 @@ function dispatchError(_a) {
     subject.error(err);
 }
 
-},{"../Observable":368,"../subject/AsyncSubject":591,"../util/errorObject":604,"../util/tryCatch":618}],483:[function(require,module,exports){
+},{"../Observable":413,"../subject/AsyncSubject":636,"../util/errorObject":649,"../util/tryCatch":663}],528:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -67303,7 +72602,7 @@ function dispatchError(_a) {
     subject.error(err);
 }
 
-},{"../Observable":368,"../subject/AsyncSubject":591,"../util/errorObject":604,"../util/tryCatch":618}],484:[function(require,module,exports){
+},{"../Observable":413,"../subject/AsyncSubject":636,"../util/errorObject":649,"../util/tryCatch":663}],529:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -67434,7 +72733,7 @@ var RefCountSubscriber = (function (_super) {
     return RefCountSubscriber;
 }(Subscriber_1.Subscriber));
 
-},{"../Observable":368,"../Subscriber":374,"../Subscription":375}],485:[function(require,module,exports){
+},{"../Observable":413,"../Subscriber":419,"../Subscription":420}],530:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -67466,7 +72765,7 @@ var DeferObservable = (function (_super) {
 }(Observable_1.Observable));
 exports.DeferObservable = DeferObservable;
 
-},{"../Observable":368,"../util/errorObject":604,"../util/tryCatch":618}],486:[function(require,module,exports){
+},{"../Observable":413,"../util/errorObject":649,"../util/tryCatch":663}],531:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -67500,7 +72799,7 @@ var EmptyObservable = (function (_super) {
 }(Observable_1.Observable));
 exports.EmptyObservable = EmptyObservable;
 
-},{"../Observable":368}],487:[function(require,module,exports){
+},{"../Observable":413}],532:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -67538,7 +72837,7 @@ var ErrorObservable = (function (_super) {
 }(Observable_1.Observable));
 exports.ErrorObservable = ErrorObservable;
 
-},{"../Observable":368}],488:[function(require,module,exports){
+},{"../Observable":413}],533:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -67638,7 +72937,7 @@ function emptyArray(len) {
     return arr;
 }
 
-},{"../Observable":368,"../Subscriber":374,"../util/isArray":605,"../util/isPromise":610,"./EmptyObservable":486,"./PromiseObservable":495}],489:[function(require,module,exports){
+},{"../Observable":413,"../Subscriber":419,"../util/isArray":650,"../util/isPromise":655,"./EmptyObservable":531,"./PromiseObservable":540}],534:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -67719,7 +73018,7 @@ var FromEventObservable = (function (_super) {
 }(Observable_1.Observable));
 exports.FromEventObservable = FromEventObservable;
 
-},{"../Observable":368,"../Subscription":375,"../util/errorObject":604,"../util/tryCatch":618}],490:[function(require,module,exports){
+},{"../Observable":413,"../Subscription":420,"../util/errorObject":649,"../util/tryCatch":663}],535:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -67767,7 +73066,7 @@ var FromEventPatternObservable = (function (_super) {
 }(Observable_1.Observable));
 exports.FromEventPatternObservable = FromEventPatternObservable;
 
-},{"../Observable":368,"../Subscription":375,"../util/errorObject":604,"../util/tryCatch":618}],491:[function(require,module,exports){
+},{"../Observable":413,"../Subscription":420,"../util/errorObject":649,"../util/tryCatch":663}],536:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -67839,7 +73138,7 @@ var FromObservable = (function (_super) {
 }(Observable_1.Observable));
 exports.FromObservable = FromObservable;
 
-},{"../Observable":368,"../operator/observeOn":541,"../util/SymbolShim":603,"../util/isArray":605,"../util/isFunction":607,"../util/isPromise":610,"../util/isScheduler":611,"./ArrayLikeObservable":480,"./ArrayObservable":481,"./IteratorObservable":493,"./PromiseObservable":495}],492:[function(require,module,exports){
+},{"../Observable":413,"../operator/observeOn":586,"../util/SymbolShim":648,"../util/isArray":650,"../util/isFunction":652,"../util/isPromise":655,"../util/isScheduler":656,"./ArrayLikeObservable":525,"./ArrayObservable":526,"./IteratorObservable":538,"./PromiseObservable":540}],537:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -67890,7 +73189,7 @@ var IntervalObservable = (function (_super) {
 }(Observable_1.Observable));
 exports.IntervalObservable = IntervalObservable;
 
-},{"../Observable":368,"../scheduler/asap":589,"../util/isNumeric":608}],493:[function(require,module,exports){
+},{"../Observable":413,"../scheduler/asap":634,"../util/isNumeric":653}],538:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -68079,7 +73378,7 @@ function sign(value) {
     return valueAsNumber < 0 ? -1 : 1;
 }
 
-},{"../Observable":368,"../util/SymbolShim":603,"../util/errorObject":604,"../util/isFunction":607,"../util/isObject":609,"../util/root":614,"../util/tryCatch":618}],494:[function(require,module,exports){
+},{"../Observable":413,"../util/SymbolShim":648,"../util/errorObject":649,"../util/isFunction":652,"../util/isObject":654,"../util/root":659,"../util/tryCatch":663}],539:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -68103,7 +73402,7 @@ var NeverObservable = (function (_super) {
 }(Observable_1.Observable));
 exports.NeverObservable = NeverObservable;
 
-},{"../Observable":368,"../util/noop":612}],495:[function(require,module,exports){
+},{"../Observable":413,"../util/noop":657}],540:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -68196,7 +73495,7 @@ function dispatchError(_a) {
     }
 }
 
-},{"../Observable":368,"../util/root":614}],496:[function(require,module,exports){
+},{"../Observable":413,"../util/root":659}],541:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -68258,7 +73557,7 @@ var RangeObservable = (function (_super) {
 }(Observable_1.Observable));
 exports.RangeObservable = RangeObservable;
 
-},{"../Observable":368}],497:[function(require,module,exports){
+},{"../Observable":413}],542:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -68309,7 +73608,7 @@ var ScalarObservable = (function (_super) {
 }(Observable_1.Observable));
 exports.ScalarObservable = ScalarObservable;
 
-},{"../Observable":368}],498:[function(require,module,exports){
+},{"../Observable":413}],543:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -68356,7 +73655,7 @@ var SubscribeOnObservable = (function (_super) {
 }(Observable_1.Observable));
 exports.SubscribeOnObservable = SubscribeOnObservable;
 
-},{"../Observable":368,"../scheduler/asap":589,"../util/isNumeric":608}],499:[function(require,module,exports){
+},{"../Observable":413,"../scheduler/asap":634,"../util/isNumeric":653}],544:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -68417,7 +73716,7 @@ var TimerObservable = (function (_super) {
 }(Observable_1.Observable));
 exports.TimerObservable = TimerObservable;
 
-},{"../Observable":368,"../scheduler/asap":589,"../util/isDate":606,"../util/isNumeric":608,"../util/isScheduler":611}],500:[function(require,module,exports){
+},{"../Observable":413,"../scheduler/asap":634,"../util/isDate":651,"../util/isNumeric":653,"../util/isScheduler":656}],545:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -68470,7 +73769,7 @@ var BufferSubscriber = (function (_super) {
     return BufferSubscriber;
 }(OuterSubscriber_1.OuterSubscriber));
 
-},{"../OuterSubscriber":371,"../util/subscribeToResult":615}],501:[function(require,module,exports){
+},{"../OuterSubscriber":416,"../util/subscribeToResult":660}],546:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -68555,7 +73854,7 @@ var BufferCountSubscriber = (function (_super) {
     return BufferCountSubscriber;
 }(Subscriber_1.Subscriber));
 
-},{"../Subscriber":374}],502:[function(require,module,exports){
+},{"../Subscriber":419}],547:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -68674,7 +73973,7 @@ function dispatchBufferClose(_a) {
     subscriber.closeBuffer(buffer);
 }
 
-},{"../Subscriber":374,"../scheduler/asap":589}],503:[function(require,module,exports){
+},{"../Subscriber":419,"../scheduler/asap":634}],548:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -68820,7 +74119,7 @@ var BufferToggleClosingsSubscriber = (function (_super) {
     return BufferToggleClosingsSubscriber;
 }(Subscriber_1.Subscriber));
 
-},{"../Subscriber":374,"../Subscription":375,"../util/errorObject":604,"../util/tryCatch":618}],504:[function(require,module,exports){
+},{"../Subscriber":419,"../Subscription":420,"../util/errorObject":649,"../util/tryCatch":663}],549:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -68916,7 +74215,7 @@ var BufferWhenSubscriber = (function (_super) {
     return BufferWhenSubscriber;
 }(OuterSubscriber_1.OuterSubscriber));
 
-},{"../OuterSubscriber":371,"../Subscription":375,"../util/errorObject":604,"../util/subscribeToResult":615,"../util/tryCatch":618}],505:[function(require,module,exports){
+},{"../OuterSubscriber":416,"../Subscription":420,"../util/errorObject":649,"../util/subscribeToResult":660,"../util/tryCatch":663}],550:[function(require,module,exports){
 "use strict";
 var publishReplay_1 = require('./publishReplay');
 function cache(bufferSize, windowTime, scheduler) {
@@ -68926,7 +74225,7 @@ function cache(bufferSize, windowTime, scheduler) {
 }
 exports.cache = cache;
 
-},{"./publishReplay":547}],506:[function(require,module,exports){
+},{"./publishReplay":592}],551:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -68987,7 +74286,7 @@ var CatchSubscriber = (function (_super) {
     return CatchSubscriber;
 }(Subscriber_1.Subscriber));
 
-},{"../Subscriber":374}],507:[function(require,module,exports){
+},{"../Subscriber":419}],552:[function(require,module,exports){
 "use strict";
 var combineLatest_1 = require('./combineLatest');
 /**
@@ -69007,7 +74306,7 @@ function combineAll(project) {
 }
 exports.combineAll = combineAll;
 
-},{"./combineLatest":508}],508:[function(require,module,exports){
+},{"./combineLatest":553}],553:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -69147,7 +74446,7 @@ var CombineLatestSubscriber = (function (_super) {
 }(OuterSubscriber_1.OuterSubscriber));
 exports.CombineLatestSubscriber = CombineLatestSubscriber;
 
-},{"../OuterSubscriber":371,"../observable/ArrayObservable":481,"../util/isArray":605,"../util/isScheduler":611,"../util/subscribeToResult":615}],509:[function(require,module,exports){
+},{"../OuterSubscriber":416,"../observable/ArrayObservable":526,"../util/isArray":650,"../util/isScheduler":656,"../util/subscribeToResult":660}],554:[function(require,module,exports){
 "use strict";
 var isScheduler_1 = require('../util/isScheduler');
 var ArrayObservable_1 = require('../observable/ArrayObservable');
@@ -69189,7 +74488,7 @@ function concatStatic() {
 }
 exports.concatStatic = concatStatic;
 
-},{"../observable/ArrayObservable":481,"../util/isScheduler":611,"./mergeAll":537}],510:[function(require,module,exports){
+},{"../observable/ArrayObservable":526,"../util/isScheduler":656,"./mergeAll":582}],555:[function(require,module,exports){
 "use strict";
 var mergeAll_1 = require('./mergeAll');
 /**
@@ -69208,7 +74507,7 @@ function concatAll() {
 }
 exports.concatAll = concatAll;
 
-},{"./mergeAll":537}],511:[function(require,module,exports){
+},{"./mergeAll":582}],556:[function(require,module,exports){
 "use strict";
 var mergeMap_1 = require('./mergeMap');
 /**
@@ -69235,7 +74534,7 @@ function concatMap(project, resultSelector) {
 }
 exports.concatMap = concatMap;
 
-},{"./mergeMap":538}],512:[function(require,module,exports){
+},{"./mergeMap":583}],557:[function(require,module,exports){
 "use strict";
 var mergeMapTo_1 = require('./mergeMapTo');
 /**
@@ -69256,7 +74555,7 @@ function concatMapTo(observable, resultSelector) {
 }
 exports.concatMapTo = concatMapTo;
 
-},{"./mergeMapTo":539}],513:[function(require,module,exports){
+},{"./mergeMapTo":584}],558:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -69328,7 +74627,7 @@ var CountSubscriber = (function (_super) {
     return CountSubscriber;
 }(Subscriber_1.Subscriber));
 
-},{"../Subscriber":374}],514:[function(require,module,exports){
+},{"../Subscriber":419}],559:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -69419,7 +74718,7 @@ var DebounceSubscriber = (function (_super) {
     return DebounceSubscriber;
 }(OuterSubscriber_1.OuterSubscriber));
 
-},{"../OuterSubscriber":371,"../util/subscribeToResult":615}],515:[function(require,module,exports){
+},{"../OuterSubscriber":416,"../util/subscribeToResult":660}],560:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -69497,7 +74796,7 @@ function dispatchNext(subscriber) {
     subscriber.debouncedNext();
 }
 
-},{"../Subscriber":374,"../scheduler/asap":589}],516:[function(require,module,exports){
+},{"../Subscriber":419,"../scheduler/asap":634}],561:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -69544,7 +74843,7 @@ var DefaultIfEmptySubscriber = (function (_super) {
     return DefaultIfEmptySubscriber;
 }(Subscriber_1.Subscriber));
 
-},{"../Subscriber":374}],517:[function(require,module,exports){
+},{"../Subscriber":419}],562:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -69643,7 +74942,7 @@ var DelayMessage = (function () {
     return DelayMessage;
 }());
 
-},{"../Notification":367,"../Subscriber":374,"../scheduler/asap":589,"../util/isDate":606}],518:[function(require,module,exports){
+},{"../Notification":412,"../Subscriber":419,"../scheduler/asap":634,"../util/isDate":651}],563:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -69781,7 +75080,7 @@ var SubscriptionDelaySubscriber = (function (_super) {
     return SubscriptionDelaySubscriber;
 }(Subscriber_1.Subscriber));
 
-},{"../Observable":368,"../OuterSubscriber":371,"../Subscriber":374,"../util/subscribeToResult":615}],519:[function(require,module,exports){
+},{"../Observable":413,"../OuterSubscriber":416,"../Subscriber":419,"../util/subscribeToResult":660}],564:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -69816,7 +75115,7 @@ var DeMaterializeSubscriber = (function (_super) {
     return DeMaterializeSubscriber;
 }(Subscriber_1.Subscriber));
 
-},{"../Subscriber":374}],520:[function(require,module,exports){
+},{"../Subscriber":419}],565:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -69880,7 +75179,7 @@ var DistinctUntilChangedSubscriber = (function (_super) {
     return DistinctUntilChangedSubscriber;
 }(Subscriber_1.Subscriber));
 
-},{"../Subscriber":374,"../util/errorObject":604,"../util/tryCatch":618}],521:[function(require,module,exports){
+},{"../Subscriber":419,"../util/errorObject":649,"../util/tryCatch":663}],566:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -69965,7 +75264,7 @@ var DoSubscriber = (function (_super) {
     return DoSubscriber;
 }(Subscriber_1.Subscriber));
 
-},{"../Subscriber":374,"../util/noop":612}],522:[function(require,module,exports){
+},{"../Subscriber":419,"../util/noop":657}],567:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -70028,7 +75327,7 @@ var EverySubscriber = (function (_super) {
     return EverySubscriber;
 }(Subscriber_1.Subscriber));
 
-},{"../Subscriber":374}],523:[function(require,module,exports){
+},{"../Subscriber":419}],568:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -70137,7 +75436,7 @@ var ExpandSubscriber = (function (_super) {
 }(OuterSubscriber_1.OuterSubscriber));
 exports.ExpandSubscriber = ExpandSubscriber;
 
-},{"../OuterSubscriber":371,"../util/errorObject":604,"../util/subscribeToResult":615,"../util/tryCatch":618}],524:[function(require,module,exports){
+},{"../OuterSubscriber":416,"../util/errorObject":649,"../util/subscribeToResult":660,"../util/tryCatch":663}],569:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -70195,7 +75494,7 @@ var FilterSubscriber = (function (_super) {
     return FilterSubscriber;
 }(Subscriber_1.Subscriber));
 
-},{"../Subscriber":374}],525:[function(require,module,exports){
+},{"../Subscriber":419}],570:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -70232,7 +75531,7 @@ var FinallySubscriber = (function (_super) {
     return FinallySubscriber;
 }(Subscriber_1.Subscriber));
 
-},{"../Subscriber":374,"../Subscription":375}],526:[function(require,module,exports){
+},{"../Subscriber":419,"../Subscription":420}],571:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -70333,7 +75632,7 @@ var FirstSubscriber = (function (_super) {
     return FirstSubscriber;
 }(Subscriber_1.Subscriber));
 
-},{"../Subscriber":374,"../util/EmptyError":597}],527:[function(require,module,exports){
+},{"../Subscriber":419,"../util/EmptyError":642}],572:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -70555,7 +75854,7 @@ var InnerRefCountSubscription = (function (_super) {
     return InnerRefCountSubscription;
 }(Subscription_1.Subscription));
 
-},{"../Observable":368,"../Operator":370,"../Subject":373,"../Subscriber":374,"../Subscription":375,"../util/FastMap":598,"../util/Map":600}],528:[function(require,module,exports){
+},{"../Observable":413,"../Operator":415,"../Subject":418,"../Subscriber":419,"../Subscription":420,"../util/FastMap":643,"../util/Map":645}],573:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -70596,7 +75895,7 @@ var IgnoreElementsSubscriber = (function (_super) {
     return IgnoreElementsSubscriber;
 }(Subscriber_1.Subscriber));
 
-},{"../Subscriber":374,"../util/noop":612}],529:[function(require,module,exports){
+},{"../Subscriber":419,"../util/noop":657}],574:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -70662,7 +75961,7 @@ var InspectSubscriber = (function (_super) {
     return InspectSubscriber;
 }(OuterSubscriber_1.OuterSubscriber));
 
-},{"../OuterSubscriber":371,"../util/errorObject":604,"../util/subscribeToResult":615,"../util/tryCatch":618}],530:[function(require,module,exports){
+},{"../OuterSubscriber":416,"../util/errorObject":649,"../util/subscribeToResult":660,"../util/tryCatch":663}],575:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -70720,7 +76019,7 @@ function dispatchNext(subscriber) {
     subscriber.clearThrottle();
 }
 
-},{"../Subscriber":374,"../scheduler/asap":589}],531:[function(require,module,exports){
+},{"../Subscriber":419,"../scheduler/asap":634}],576:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -70830,14 +76129,14 @@ var LastSubscriber = (function (_super) {
     return LastSubscriber;
 }(Subscriber_1.Subscriber));
 
-},{"../Subscriber":374,"../util/EmptyError":597}],532:[function(require,module,exports){
+},{"../Subscriber":419,"../util/EmptyError":642}],577:[function(require,module,exports){
 "use strict";
 function letProto(func) {
     return func(this);
 }
 exports.letProto = letProto;
 
-},{}],533:[function(require,module,exports){
+},{}],578:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -70896,7 +76195,7 @@ var MapSubscriber = (function (_super) {
     return MapSubscriber;
 }(Subscriber_1.Subscriber));
 
-},{"../Subscriber":374}],534:[function(require,module,exports){
+},{"../Subscriber":419}],579:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -70937,7 +76236,7 @@ var MapToSubscriber = (function (_super) {
     return MapToSubscriber;
 }(Subscriber_1.Subscriber));
 
-},{"../Subscriber":374}],535:[function(require,module,exports){
+},{"../Subscriber":419}],580:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -70990,7 +76289,7 @@ var MaterializeSubscriber = (function (_super) {
     return MaterializeSubscriber;
 }(Subscriber_1.Subscriber));
 
-},{"../Notification":367,"../Subscriber":374}],536:[function(require,module,exports){
+},{"../Notification":412,"../Subscriber":419}],581:[function(require,module,exports){
 "use strict";
 var ArrayObservable_1 = require('../observable/ArrayObservable');
 var mergeAll_1 = require('./mergeAll');
@@ -71036,7 +76335,7 @@ function mergeStatic() {
 }
 exports.mergeStatic = mergeStatic;
 
-},{"../observable/ArrayObservable":481,"../util/isScheduler":611,"./mergeAll":537}],537:[function(require,module,exports){
+},{"../observable/ArrayObservable":526,"../util/isScheduler":656,"./mergeAll":582}],582:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -71099,7 +76398,7 @@ var MergeAllSubscriber = (function (_super) {
 }(OuterSubscriber_1.OuterSubscriber));
 exports.MergeAllSubscriber = MergeAllSubscriber;
 
-},{"../OuterSubscriber":371,"../util/subscribeToResult":615}],538:[function(require,module,exports){
+},{"../OuterSubscriber":416,"../util/subscribeToResult":660}],583:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -71214,7 +76513,7 @@ var MergeMapSubscriber = (function (_super) {
 }(OuterSubscriber_1.OuterSubscriber));
 exports.MergeMapSubscriber = MergeMapSubscriber;
 
-},{"../OuterSubscriber":371,"../util/subscribeToResult":615}],539:[function(require,module,exports){
+},{"../OuterSubscriber":416,"../util/subscribeToResult":660}],584:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -71317,7 +76616,7 @@ var MergeMapToSubscriber = (function (_super) {
 }(OuterSubscriber_1.OuterSubscriber));
 exports.MergeMapToSubscriber = MergeMapToSubscriber;
 
-},{"../OuterSubscriber":371,"../util/subscribeToResult":615}],540:[function(require,module,exports){
+},{"../OuterSubscriber":416,"../util/subscribeToResult":660}],585:[function(require,module,exports){
 "use strict";
 var ConnectableObservable_1 = require('../observable/ConnectableObservable');
 /**
@@ -71348,7 +76647,7 @@ function multicast(subjectOrSubjectFactory) {
 }
 exports.multicast = multicast;
 
-},{"../observable/ConnectableObservable":484}],541:[function(require,module,exports){
+},{"../observable/ConnectableObservable":529}],586:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -71409,7 +76708,7 @@ var ObserveOnMessage = (function () {
     return ObserveOnMessage;
 }());
 
-},{"../Notification":367,"../Subscriber":374}],542:[function(require,module,exports){
+},{"../Notification":412,"../Subscriber":419}],587:[function(require,module,exports){
 "use strict";
 var not_1 = require('../util/not');
 var filter_1 = require('./filter');
@@ -71421,7 +76720,7 @@ function partition(predicate, thisArg) {
 }
 exports.partition = partition;
 
-},{"../util/not":613,"./filter":524}],543:[function(require,module,exports){
+},{"../util/not":658,"./filter":569}],588:[function(require,module,exports){
 "use strict";
 var map_1 = require('./map');
 /**
@@ -71461,7 +76760,7 @@ function plucker(props, length) {
     return mapper;
 }
 
-},{"./map":533}],544:[function(require,module,exports){
+},{"./map":578}],589:[function(require,module,exports){
 "use strict";
 var Subject_1 = require('../Subject');
 var multicast_1 = require('./multicast');
@@ -71478,7 +76777,7 @@ function publish() {
 }
 exports.publish = publish;
 
-},{"../Subject":373,"./multicast":540}],545:[function(require,module,exports){
+},{"../Subject":418,"./multicast":585}],590:[function(require,module,exports){
 "use strict";
 var BehaviorSubject_1 = require('../subject/BehaviorSubject');
 var multicast_1 = require('./multicast');
@@ -71487,7 +76786,7 @@ function publishBehavior(value) {
 }
 exports.publishBehavior = publishBehavior;
 
-},{"../subject/BehaviorSubject":592,"./multicast":540}],546:[function(require,module,exports){
+},{"../subject/BehaviorSubject":637,"./multicast":585}],591:[function(require,module,exports){
 "use strict";
 var AsyncSubject_1 = require('../subject/AsyncSubject');
 var multicast_1 = require('./multicast');
@@ -71496,7 +76795,7 @@ function publishLast() {
 }
 exports.publishLast = publishLast;
 
-},{"../subject/AsyncSubject":591,"./multicast":540}],547:[function(require,module,exports){
+},{"../subject/AsyncSubject":636,"./multicast":585}],592:[function(require,module,exports){
 "use strict";
 var ReplaySubject_1 = require('../subject/ReplaySubject');
 var multicast_1 = require('./multicast');
@@ -71507,7 +76806,7 @@ function publishReplay(bufferSize, windowTime, scheduler) {
 }
 exports.publishReplay = publishReplay;
 
-},{"../subject/ReplaySubject":593,"./multicast":540}],548:[function(require,module,exports){
+},{"../subject/ReplaySubject":638,"./multicast":585}],593:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -71615,7 +76914,7 @@ var RaceSubscriber = (function (_super) {
 }(OuterSubscriber_1.OuterSubscriber));
 exports.RaceSubscriber = RaceSubscriber;
 
-},{"../OuterSubscriber":371,"../observable/ArrayObservable":481,"../util/isArray":605,"../util/subscribeToResult":615}],549:[function(require,module,exports){
+},{"../OuterSubscriber":416,"../observable/ArrayObservable":526,"../util/isArray":650,"../util/subscribeToResult":660}],594:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -71693,7 +76992,7 @@ var ReduceSubscriber = (function (_super) {
 }(Subscriber_1.Subscriber));
 exports.ReduceSubscriber = ReduceSubscriber;
 
-},{"../Subscriber":374}],550:[function(require,module,exports){
+},{"../Subscriber":419}],595:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -71762,7 +77061,7 @@ var RepeatSubscriber = (function (_super) {
     return RepeatSubscriber;
 }(Subscriber_1.Subscriber));
 
-},{"../Subscriber":374,"../observable/EmptyObservable":486}],551:[function(require,module,exports){
+},{"../Subscriber":419,"../observable/EmptyObservable":531}],596:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -71825,7 +77124,7 @@ var RetrySubscriber = (function (_super) {
     return RetrySubscriber;
 }(Subscriber_1.Subscriber));
 
-},{"../Subscriber":374}],552:[function(require,module,exports){
+},{"../Subscriber":419}],597:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -71925,7 +77224,7 @@ var RetryWhenSubscriber = (function (_super) {
     return RetryWhenSubscriber;
 }(OuterSubscriber_1.OuterSubscriber));
 
-},{"../OuterSubscriber":371,"../Subject":373,"../util/errorObject":604,"../util/subscribeToResult":615,"../util/tryCatch":618}],553:[function(require,module,exports){
+},{"../OuterSubscriber":416,"../Subject":418,"../util/errorObject":649,"../util/subscribeToResult":660,"../util/tryCatch":663}],598:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -71984,7 +77283,7 @@ var SampleSubscriber = (function (_super) {
     return SampleSubscriber;
 }(OuterSubscriber_1.OuterSubscriber));
 
-},{"../OuterSubscriber":371,"../util/subscribeToResult":615}],554:[function(require,module,exports){
+},{"../OuterSubscriber":416,"../util/subscribeToResult":660}],599:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -72035,7 +77334,7 @@ function dispatchNotification(state) {
     this.schedule(state, delay);
 }
 
-},{"../Subscriber":374,"../scheduler/asap":589}],555:[function(require,module,exports){
+},{"../Subscriber":419,"../scheduler/asap":634}],600:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -72112,7 +77411,7 @@ var ScanSubscriber = (function (_super) {
     return ScanSubscriber;
 }(Subscriber_1.Subscriber));
 
-},{"../Subscriber":374}],556:[function(require,module,exports){
+},{"../Subscriber":419}],601:[function(require,module,exports){
 "use strict";
 var multicast_1 = require('./multicast');
 var Subject_1 = require('../Subject');
@@ -72135,7 +77434,7 @@ function share() {
 exports.share = share;
 ;
 
-},{"../Subject":373,"./multicast":540}],557:[function(require,module,exports){
+},{"../Subject":418,"./multicast":585}],602:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -72222,7 +77521,7 @@ var SingleSubscriber = (function (_super) {
     return SingleSubscriber;
 }(Subscriber_1.Subscriber));
 
-},{"../Subscriber":374,"../util/EmptyError":597}],558:[function(require,module,exports){
+},{"../Subscriber":419,"../util/EmptyError":642}],603:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -72267,7 +77566,7 @@ var SkipSubscriber = (function (_super) {
     return SkipSubscriber;
 }(Subscriber_1.Subscriber));
 
-},{"../Subscriber":374}],559:[function(require,module,exports){
+},{"../Subscriber":419}],604:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -72332,7 +77631,7 @@ var SkipUntilSubscriber = (function (_super) {
     return SkipUntilSubscriber;
 }(OuterSubscriber_1.OuterSubscriber));
 
-},{"../OuterSubscriber":371,"../util/subscribeToResult":615}],560:[function(require,module,exports){
+},{"../OuterSubscriber":416,"../util/subscribeToResult":660}],605:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -72392,7 +77691,7 @@ var SkipWhileSubscriber = (function (_super) {
     return SkipWhileSubscriber;
 }(Subscriber_1.Subscriber));
 
-},{"../Subscriber":374}],561:[function(require,module,exports){
+},{"../Subscriber":419}],606:[function(require,module,exports){
 "use strict";
 var ArrayObservable_1 = require('../observable/ArrayObservable');
 var ScalarObservable_1 = require('../observable/ScalarObservable');
@@ -72434,7 +77733,7 @@ function startWith() {
 }
 exports.startWith = startWith;
 
-},{"../observable/ArrayObservable":481,"../observable/EmptyObservable":486,"../observable/ScalarObservable":497,"../util/isScheduler":611,"./concat":509}],562:[function(require,module,exports){
+},{"../observable/ArrayObservable":526,"../observable/EmptyObservable":531,"../observable/ScalarObservable":542,"../util/isScheduler":656,"./concat":554}],607:[function(require,module,exports){
 "use strict";
 var SubscribeOnObservable_1 = require('../observable/SubscribeOnObservable');
 /**
@@ -72452,7 +77751,7 @@ function subscribeOn(scheduler, delay) {
 }
 exports.subscribeOn = subscribeOn;
 
-},{"../observable/SubscribeOnObservable":498}],563:[function(require,module,exports){
+},{"../observable/SubscribeOnObservable":543}],608:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -72529,7 +77828,7 @@ var SwitchSubscriber = (function (_super) {
     return SwitchSubscriber;
 }(OuterSubscriber_1.OuterSubscriber));
 
-},{"../OuterSubscriber":371,"../util/subscribeToResult":615}],564:[function(require,module,exports){
+},{"../OuterSubscriber":416,"../util/subscribeToResult":660}],609:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -72627,7 +77926,7 @@ var SwitchMapSubscriber = (function (_super) {
     return SwitchMapSubscriber;
 }(OuterSubscriber_1.OuterSubscriber));
 
-},{"../OuterSubscriber":371,"../util/subscribeToResult":615}],565:[function(require,module,exports){
+},{"../OuterSubscriber":416,"../util/subscribeToResult":660}],610:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -72705,7 +78004,7 @@ var SwitchMapToSubscriber = (function (_super) {
     return SwitchMapToSubscriber;
 }(OuterSubscriber_1.OuterSubscriber));
 
-},{"../OuterSubscriber":371,"../util/subscribeToResult":615}],566:[function(require,module,exports){
+},{"../OuterSubscriber":416,"../util/subscribeToResult":660}],611:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -72755,7 +78054,7 @@ var TakeSubscriber = (function (_super) {
     return TakeSubscriber;
 }(Subscriber_1.Subscriber));
 
-},{"../Subscriber":374,"../observable/EmptyObservable":486,"../util/ArgumentOutOfRangeError":596}],567:[function(require,module,exports){
+},{"../Subscriber":419,"../observable/EmptyObservable":531,"../util/ArgumentOutOfRangeError":641}],612:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -72835,7 +78134,7 @@ var TakeLastSubscriber = (function (_super) {
     return TakeLastSubscriber;
 }(Subscriber_1.Subscriber));
 
-},{"../Subscriber":374,"../observable/EmptyObservable":486,"../util/ArgumentOutOfRangeError":596}],568:[function(require,module,exports){
+},{"../Subscriber":419,"../observable/EmptyObservable":531,"../util/ArgumentOutOfRangeError":641}],613:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -72873,7 +78172,7 @@ var TakeUntilSubscriber = (function (_super) {
     return TakeUntilSubscriber;
 }(OuterSubscriber_1.OuterSubscriber));
 
-},{"../OuterSubscriber":371,"../util/subscribeToResult":615}],569:[function(require,module,exports){
+},{"../OuterSubscriber":416,"../util/subscribeToResult":660}],614:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -72925,7 +78224,7 @@ var TakeWhileSubscriber = (function (_super) {
     return TakeWhileSubscriber;
 }(Subscriber_1.Subscriber));
 
-},{"../Subscriber":374}],570:[function(require,module,exports){
+},{"../Subscriber":419}],615:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -72991,7 +78290,7 @@ var ThrottleSubscriber = (function (_super) {
     return ThrottleSubscriber;
 }(OuterSubscriber_1.OuterSubscriber));
 
-},{"../OuterSubscriber":371,"../util/subscribeToResult":615}],571:[function(require,module,exports){
+},{"../OuterSubscriber":416,"../util/subscribeToResult":660}],616:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -73043,7 +78342,7 @@ function dispatchNext(_a) {
     subscriber.clearThrottle();
 }
 
-},{"../Subscriber":374,"../scheduler/asap":589}],572:[function(require,module,exports){
+},{"../Subscriber":419,"../scheduler/asap":634}],617:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -73133,7 +78432,7 @@ var TimeoutSubscriber = (function (_super) {
     return TimeoutSubscriber;
 }(Subscriber_1.Subscriber));
 
-},{"../Subscriber":374,"../scheduler/asap":589,"../util/isDate":606}],573:[function(require,module,exports){
+},{"../Subscriber":419,"../scheduler/asap":634,"../util/isDate":651}],618:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -73231,7 +78530,7 @@ var TimeoutWithSubscriber = (function (_super) {
     return TimeoutWithSubscriber;
 }(OuterSubscriber_1.OuterSubscriber));
 
-},{"../OuterSubscriber":371,"../scheduler/asap":589,"../util/isDate":606,"../util/subscribeToResult":615}],574:[function(require,module,exports){
+},{"../OuterSubscriber":416,"../scheduler/asap":634,"../util/isDate":651,"../util/subscribeToResult":660}],619:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -73267,7 +78566,7 @@ var ToArraySubscriber = (function (_super) {
     return ToArraySubscriber;
 }(Subscriber_1.Subscriber));
 
-},{"../Subscriber":374}],575:[function(require,module,exports){
+},{"../Subscriber":419}],620:[function(require,module,exports){
 "use strict";
 var root_1 = require('../util/root');
 function toPromise(PromiseCtor) {
@@ -73290,7 +78589,7 @@ function toPromise(PromiseCtor) {
 }
 exports.toPromise = toPromise;
 
-},{"../util/root":614}],576:[function(require,module,exports){
+},{"../util/root":659}],621:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -73355,7 +78654,7 @@ var WindowSubscriber = (function (_super) {
     return WindowSubscriber;
 }(OuterSubscriber_1.OuterSubscriber));
 
-},{"../OuterSubscriber":371,"../Subject":373,"../util/subscribeToResult":615}],577:[function(require,module,exports){
+},{"../OuterSubscriber":416,"../Subject":418,"../util/subscribeToResult":660}],622:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -73429,7 +78728,7 @@ var WindowCountSubscriber = (function (_super) {
     return WindowCountSubscriber;
 }(Subscriber_1.Subscriber));
 
-},{"../Subject":373,"../Subscriber":374}],578:[function(require,module,exports){
+},{"../Subject":418,"../Subscriber":419}],623:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -73546,7 +78845,7 @@ function dispatchWindowClose(_a) {
     subscriber.closeWindow(window);
 }
 
-},{"../Subject":373,"../Subscriber":374,"../scheduler/asap":589}],579:[function(require,module,exports){
+},{"../Subject":418,"../Subscriber":419,"../scheduler/asap":634}],624:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -73673,7 +78972,7 @@ var WindowToggleSubscriber = (function (_super) {
     return WindowToggleSubscriber;
 }(OuterSubscriber_1.OuterSubscriber));
 
-},{"../OuterSubscriber":371,"../Subject":373,"../Subscription":375,"../util/errorObject":604,"../util/subscribeToResult":615,"../util/tryCatch":618}],580:[function(require,module,exports){
+},{"../OuterSubscriber":416,"../Subject":418,"../Subscription":420,"../util/errorObject":649,"../util/subscribeToResult":660,"../util/tryCatch":663}],625:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -73759,7 +79058,7 @@ var WindowSubscriber = (function (_super) {
     return WindowSubscriber;
 }(OuterSubscriber_1.OuterSubscriber));
 
-},{"../OuterSubscriber":371,"../Subject":373,"../util/errorObject":604,"../util/subscribeToResult":615,"../util/tryCatch":618}],581:[function(require,module,exports){
+},{"../OuterSubscriber":416,"../Subject":418,"../util/errorObject":649,"../util/subscribeToResult":660,"../util/tryCatch":663}],626:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -73865,7 +79164,7 @@ var WithLatestFromSubscriber = (function (_super) {
     return WithLatestFromSubscriber;
 }(OuterSubscriber_1.OuterSubscriber));
 
-},{"../OuterSubscriber":371,"../util/subscribeToResult":615}],582:[function(require,module,exports){
+},{"../OuterSubscriber":416,"../util/subscribeToResult":660}],627:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -74097,7 +79396,7 @@ var ZipBufferIterator = (function (_super) {
     return ZipBufferIterator;
 }(OuterSubscriber_1.OuterSubscriber));
 
-},{"../OuterSubscriber":371,"../Subscriber":374,"../observable/ArrayObservable":481,"../util/SymbolShim":603,"../util/isArray":605,"../util/subscribeToResult":615}],583:[function(require,module,exports){
+},{"../OuterSubscriber":416,"../Subscriber":419,"../observable/ArrayObservable":526,"../util/SymbolShim":648,"../util/isArray":650,"../util/subscribeToResult":660}],628:[function(require,module,exports){
 "use strict";
 var zip_1 = require('./zip');
 function zipAll(project) {
@@ -74105,7 +79404,7 @@ function zipAll(project) {
 }
 exports.zipAll = zipAll;
 
-},{"./zip":582}],584:[function(require,module,exports){
+},{"./zip":627}],629:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -74152,7 +79451,7 @@ var AsapAction = (function (_super) {
 }(FutureAction_1.FutureAction));
 exports.AsapAction = AsapAction;
 
-},{"../util/Immediate":599,"./FutureAction":586}],585:[function(require,module,exports){
+},{"../util/Immediate":644,"./FutureAction":631}],630:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -74173,7 +79472,7 @@ var AsapScheduler = (function (_super) {
 }(QueueScheduler_1.QueueScheduler));
 exports.AsapScheduler = AsapScheduler;
 
-},{"./AsapAction":584,"./QueueScheduler":588}],586:[function(require,module,exports){
+},{"./AsapAction":629,"./QueueScheduler":633}],631:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -74239,7 +79538,7 @@ var FutureAction = (function (_super) {
 }(Subscription_1.Subscription));
 exports.FutureAction = FutureAction;
 
-},{"../Subscription":375,"../util/root":614}],587:[function(require,module,exports){
+},{"../Subscription":420,"../util/root":659}],632:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -74268,7 +79567,7 @@ var QueueAction = (function (_super) {
 }(FutureAction_1.FutureAction));
 exports.QueueAction = QueueAction;
 
-},{"./FutureAction":586}],588:[function(require,module,exports){
+},{"./FutureAction":631}],633:[function(require,module,exports){
 "use strict";
 var QueueAction_1 = require('./QueueAction');
 var FutureAction_1 = require('./FutureAction');
@@ -74308,17 +79607,17 @@ var QueueScheduler = (function () {
 }());
 exports.QueueScheduler = QueueScheduler;
 
-},{"./FutureAction":586,"./QueueAction":587}],589:[function(require,module,exports){
+},{"./FutureAction":631,"./QueueAction":632}],634:[function(require,module,exports){
 "use strict";
 var AsapScheduler_1 = require('./AsapScheduler');
 exports.asap = new AsapScheduler_1.AsapScheduler();
 
-},{"./AsapScheduler":585}],590:[function(require,module,exports){
+},{"./AsapScheduler":630}],635:[function(require,module,exports){
 "use strict";
 var QueueScheduler_1 = require('./QueueScheduler');
 exports.queue = new QueueScheduler_1.QueueScheduler();
 
-},{"./QueueScheduler":588}],591:[function(require,module,exports){
+},{"./QueueScheduler":633}],636:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -74369,7 +79668,7 @@ var AsyncSubject = (function (_super) {
 }(Subject_1.Subject));
 exports.AsyncSubject = AsyncSubject;
 
-},{"../Subject":373}],592:[function(require,module,exports){
+},{"../Subject":418}],637:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -74421,7 +79720,7 @@ var BehaviorSubject = (function (_super) {
 }(Subject_1.Subject));
 exports.BehaviorSubject = BehaviorSubject;
 
-},{"../Subject":373,"../util/ObjectUnsubscribedError":602,"../util/throwError":616}],593:[function(require,module,exports){
+},{"../Subject":418,"../util/ObjectUnsubscribedError":647,"../util/throwError":661}],638:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -74498,7 +79797,7 @@ var ReplayEvent = (function () {
     return ReplayEvent;
 }());
 
-},{"../Subject":373,"../operator/observeOn":541,"../scheduler/queue":590}],594:[function(require,module,exports){
+},{"../Subject":418,"../operator/observeOn":586,"../scheduler/queue":635}],639:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -74534,7 +79833,7 @@ var SubjectSubscription = (function (_super) {
 }(Subscription_1.Subscription));
 exports.SubjectSubscription = SubjectSubscription;
 
-},{"../Subscription":375}],595:[function(require,module,exports){
+},{"../Subscription":420}],640:[function(require,module,exports){
 "use strict";
 var SymbolShim_1 = require('../util/SymbolShim');
 /**
@@ -74545,7 +79844,7 @@ var SymbolShim_1 = require('../util/SymbolShim');
  */
 exports.rxSubscriber = SymbolShim_1.SymbolShim.for('rxSubscriber');
 
-},{"../util/SymbolShim":603}],596:[function(require,module,exports){
+},{"../util/SymbolShim":648}],641:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -74562,7 +79861,7 @@ var ArgumentOutOfRangeError = (function (_super) {
 }(Error));
 exports.ArgumentOutOfRangeError = ArgumentOutOfRangeError;
 
-},{}],597:[function(require,module,exports){
+},{}],642:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -74579,7 +79878,7 @@ var EmptyError = (function (_super) {
 }(Error));
 exports.EmptyError = EmptyError;
 
-},{}],598:[function(require,module,exports){
+},{}],643:[function(require,module,exports){
 "use strict";
 var FastMap = (function () {
     function FastMap() {
@@ -74611,7 +79910,7 @@ var FastMap = (function () {
 }());
 exports.FastMap = FastMap;
 
-},{}],599:[function(require,module,exports){
+},{}],644:[function(require,module,exports){
 /**
 Some credit for this helper goes to http://github.com/YuzuJS/setImmediate
 */
@@ -74821,13 +80120,13 @@ var ImmediateDefinition = (function () {
 exports.ImmediateDefinition = ImmediateDefinition;
 exports.Immediate = new ImmediateDefinition(root_1.root);
 
-},{"./root":614}],600:[function(require,module,exports){
+},{"./root":659}],645:[function(require,module,exports){
 "use strict";
 var root_1 = require('./root');
 var MapPolyfill_1 = require('./MapPolyfill');
 exports.Map = root_1.root.Map || (function () { return MapPolyfill_1.MapPolyfill; })();
 
-},{"./MapPolyfill":601,"./root":614}],601:[function(require,module,exports){
+},{"./MapPolyfill":646,"./root":659}],646:[function(require,module,exports){
 "use strict";
 var MapPolyfill = (function () {
     function MapPolyfill() {
@@ -74875,7 +80174,7 @@ var MapPolyfill = (function () {
 }());
 exports.MapPolyfill = MapPolyfill;
 
-},{}],602:[function(require,module,exports){
+},{}],647:[function(require,module,exports){
 "use strict";
 var __extends = (this && this.__extends) || function (d, b) {
     for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
@@ -74896,7 +80195,7 @@ var ObjectUnsubscribedError = (function (_super) {
 }(Error));
 exports.ObjectUnsubscribedError = ObjectUnsubscribedError;
 
-},{}],603:[function(require,module,exports){
+},{}],648:[function(require,module,exports){
 "use strict";
 var root_1 = require('./root');
 function polyfillSymbol(root) {
@@ -74966,30 +80265,30 @@ function ensureObservable(Symbol) {
 exports.ensureObservable = ensureObservable;
 exports.SymbolShim = polyfillSymbol(root_1.root);
 
-},{"./root":614}],604:[function(require,module,exports){
+},{"./root":659}],649:[function(require,module,exports){
 "use strict";
 // typeof any so that it we don't have to cast when comparing a result to the error object
 exports.errorObject = { e: {} };
 
-},{}],605:[function(require,module,exports){
+},{}],650:[function(require,module,exports){
 "use strict";
 exports.isArray = Array.isArray || (function (x) { return x && typeof x.length === 'number'; });
 
-},{}],606:[function(require,module,exports){
+},{}],651:[function(require,module,exports){
 "use strict";
 function isDate(value) {
     return value instanceof Date && !isNaN(+value);
 }
 exports.isDate = isDate;
 
-},{}],607:[function(require,module,exports){
+},{}],652:[function(require,module,exports){
 "use strict";
 function isFunction(x) {
     return typeof x === 'function';
 }
 exports.isFunction = isFunction;
 
-},{}],608:[function(require,module,exports){
+},{}],653:[function(require,module,exports){
 "use strict";
 var isArray_1 = require('../util/isArray');
 function isNumeric(val) {
@@ -75002,34 +80301,34 @@ function isNumeric(val) {
 exports.isNumeric = isNumeric;
 ;
 
-},{"../util/isArray":605}],609:[function(require,module,exports){
+},{"../util/isArray":650}],654:[function(require,module,exports){
 "use strict";
 function isObject(x) {
     return x != null && typeof x === 'object';
 }
 exports.isObject = isObject;
 
-},{}],610:[function(require,module,exports){
+},{}],655:[function(require,module,exports){
 "use strict";
 function isPromise(value) {
     return value && typeof value.subscribe !== 'function' && typeof value.then === 'function';
 }
 exports.isPromise = isPromise;
 
-},{}],611:[function(require,module,exports){
+},{}],656:[function(require,module,exports){
 "use strict";
 function isScheduler(value) {
     return value && typeof value.schedule === 'function';
 }
 exports.isScheduler = isScheduler;
 
-},{}],612:[function(require,module,exports){
+},{}],657:[function(require,module,exports){
 "use strict";
 /* tslint:disable:no-empty */
 function noop() { }
 exports.noop = noop;
 
-},{}],613:[function(require,module,exports){
+},{}],658:[function(require,module,exports){
 "use strict";
 function not(pred, thisArg) {
     function notPred() {
@@ -75041,7 +80340,7 @@ function not(pred, thisArg) {
 }
 exports.not = not;
 
-},{}],614:[function(require,module,exports){
+},{}],659:[function(require,module,exports){
 (function (global){
 "use strict";
 var objectTypes = {
@@ -75063,7 +80362,7 @@ if (freeGlobal && (freeGlobal.global === freeGlobal || freeGlobal.window === fre
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
 
-},{}],615:[function(require,module,exports){
+},{}],660:[function(require,module,exports){
 "use strict";
 var root_1 = require('./root');
 var isArray_1 = require('./isArray');
@@ -75134,12 +80433,12 @@ function subscribeToResult(outerSubscriber, result, outerValue, outerIndex) {
 }
 exports.subscribeToResult = subscribeToResult;
 
-},{"../InnerSubscriber":366,"../Observable":368,"../util/SymbolShim":603,"./isArray":605,"./isPromise":610,"./root":614}],616:[function(require,module,exports){
+},{"../InnerSubscriber":411,"../Observable":413,"../util/SymbolShim":648,"./isArray":650,"./isPromise":655,"./root":659}],661:[function(require,module,exports){
 "use strict";
 function throwError(e) { throw e; }
 exports.throwError = throwError;
 
-},{}],617:[function(require,module,exports){
+},{}],662:[function(require,module,exports){
 "use strict";
 var Subscriber_1 = require('../Subscriber');
 var rxSubscriber_1 = require('../symbol/rxSubscriber');
@@ -75156,7 +80455,7 @@ function toSubscriber(nextOrObserver, error, complete) {
 }
 exports.toSubscriber = toSubscriber;
 
-},{"../Subscriber":374,"../symbol/rxSubscriber":595}],618:[function(require,module,exports){
+},{"../Subscriber":419,"../symbol/rxSubscriber":640}],663:[function(require,module,exports){
 "use strict";
 var errorObject_1 = require('./errorObject');
 var tryCatchTarget;
@@ -75176,7 +80475,7 @@ function tryCatch(fn) {
 exports.tryCatch = tryCatch;
 ;
 
-},{"./errorObject":604}],619:[function(require,module,exports){
+},{"./errorObject":649}],664:[function(require,module,exports){
 (function(self) {
   'use strict';
 
@@ -75567,9 +80866,9 @@ exports.tryCatch = tryCatch;
   self.fetch.polyfill = true
 })(typeof self !== 'undefined' ? self : this);
 
-},{}],620:[function(require,module,exports){
+},{}],665:[function(require,module,exports){
 
-},{}]},{},[1,620])
+},{}]},{},[1,665])
 
 
 //# sourceMappingURL=app.bundle.js.map

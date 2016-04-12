@@ -47,6 +47,8 @@ export class ListStuffPage {
         () => { console.log("All Good With The Data") }
         );
     }
+    
+    this.visibleObject = _visibleObject
   }
 
   doShowModal() {
@@ -62,7 +64,7 @@ export class ListStuffPage {
           (data) => {
             console.log('Item Added', data)
             alert("New Item Added To List")
-            this.loadData()
+            this.loadData(this.visibleObject)
           },
           (err) => console.log("Error Adding Item:", JSON.parse(err._body).description),
           () => { console.log("All Good With The Data") }
@@ -73,7 +75,9 @@ export class ListStuffPage {
 
 
   doShowCamera() {
-    this.tdService.addPhoto()
+    this.tdService.addPhoto((result)=>{
+        console.log("doShowCamera", result)
+    })
   }
 
   doLogout() {
