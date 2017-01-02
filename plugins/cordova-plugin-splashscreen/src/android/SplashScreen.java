@@ -52,6 +52,7 @@ public class SplashScreen extends CordovaPlugin {
     // Enable functionality only if running on 4.x.x.
     private static final boolean HAS_BUILT_IN_SPLASH_SCREEN = Integer.valueOf(CordovaWebView.CORDOVA_VERSION.split("\\.")[0]) < 4;
     private static final int DEFAULT_SPLASHSCREEN_DURATION = 3000;
+    private static final int DEFAULT_FADE_DURATION = 500;
     private static Dialog splashDialog;
     private static ProgressDialog spinnerDialog;
     private static boolean firstShow = true;
@@ -82,7 +83,13 @@ public class SplashScreen extends CordovaPlugin {
             return;
         }
         // Make WebView invisible while loading URL
-        getView().setVisibility(View.INVISIBLE);
+        // CB-11326 Ensure we're calling this on UI thread
+        cordova.getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                getView().setVisibility(View.INVISIBLE);
+            }
+        });
         int drawableId = preferences.getInteger("SplashDrawableId", 0);
         if (drawableId == 0) {
             String splashResource = preferences.getString("SplashScreen", "screen");
@@ -117,7 +124,7 @@ public class SplashScreen extends CordovaPlugin {
 
     private int getFadeDuration () {
         int fadeSplashScreenDuration = preferences.getBoolean("FadeSplashScreen", true) ?
-            preferences.getInteger("FadeSplashScreenDuration", DEFAULT_SPLASHSCREEN_DURATION) : 0;
+            preferences.getInteger("FadeSplashScreenDuration", DEFAULT_FADE_DURATION) : 0;
 
         if (fadeSplashScreenDuration < 30) {
             // [CB-9750] This value used to be in decimal seconds, so we will assume that if someone specifies 10
@@ -134,7 +141,7 @@ public class SplashScreen extends CordovaPlugin {
             return;
         }
         // hide the splash screen to avoid leaking a window
-        this.removeSplashScreen();
+        this.removeSplashScreen(true);
     }
 
     @Override
@@ -143,7 +150,7 @@ public class SplashScreen extends CordovaPlugin {
             return;
         }
         // hide the splash screen to avoid leaking a window
-        this.removeSplashScreen();
+        this.removeSplashScreen(true);
         // If we set this to true onDestroy, we lose track when we go from page to page!
         //firstShow = true;
     }
@@ -177,7 +184,7 @@ public class SplashScreen extends CordovaPlugin {
         }
         if ("splashscreen".equals(id)) {
             if ("hide".equals(data.toString())) {
-                this.removeSplashScreen();
+                this.removeSplashScreen(false);
             } else {
                 this.showSplashScreen(false);
             }
@@ -206,12 +213,13 @@ public class SplashScreen extends CordovaPlugin {
         }
     }
 
-    private void removeSplashScreen() {
+    private void removeSplashScreen(final boolean forceHideImmediately) {
         cordova.getActivity().runOnUiThread(new Runnable() {
             public void run() {
                 if (splashDialog != null && splashDialog.isShowing()) {
                     final int fadeSplashScreenDuration = getFadeDuration();
-                    if (fadeSplashScreenDuration > 0) {
+                    // CB-10692 If the plugin is being paused/destroyed, skip the fading and hide it immediately
+                    if (fadeSplashScreenDuration > 0 && forceHideImmediately == false) {
                         AlphaAnimation fadeOut = new AlphaAnimation(1, 0);
                         fadeOut.setInterpolator(new DecelerateInterpolator());
                         fadeOut.setDuration(fadeSplashScreenDuration);
@@ -319,7 +327,7 @@ public class SplashScreen extends CordovaPlugin {
                     handler.postDelayed(new Runnable() {
                         public void run() {
                             if (lastHideAfterDelay) {
-                                removeSplashScreen();
+                                removeSplashScreen(false);
                             }
                         }
                     }, effectiveSplashDuration);

@@ -1,4 +1,5 @@
-cordova.define("cordova-plugin-file.fileSystems-roots", function(require, exports, module) { /*
+cordova.define("cordova-plugin-file.fileSystems-roots", function(require, exports, module) {
+/*
  *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -26,19 +27,20 @@ var exec = require('cordova/exec');
 
 // Overridden by Android, BlackBerry 10 and iOS to populate fsMap.
 require('./fileSystems').getFs = function(name, callback) {
+    function success(response) {
+        fsMap = {};
+        for (var i = 0; i < response.length; ++i) {
+            var fsRoot = response[i];
+            var fs = new FileSystem(fsRoot.filesystemName, fsRoot);
+            fsMap[fs.name] = fs;
+        }
+        callback(fsMap[name]);
+    }
+
     if (fsMap) {
         callback(fsMap[name]);
     } else {
         exec(success, null, "File", "requestAllFileSystems", []);
-        function success(response) {
-            fsMap = {};
-            for (var i = 0; i < response.length; ++i) {
-                var fsRoot = response[i];
-                var fs = new FileSystem(fsRoot.filesystemName, fsRoot);
-                fsMap[fs.name] = fs;
-            }
-            callback(fsMap[name]);
-        }
     }
 };
 

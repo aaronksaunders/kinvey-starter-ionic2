@@ -11,12 +11,15 @@ Keyboard.hideKeyboardAccessoryBar = function(hide) {
     exec(null, null, "Keyboard", "hideKeyboardAccessoryBar", [hide]);
 };
 
-Keyboard.close = function() {	
+Keyboard.close = function() {
     exec(null, null, "Keyboard", "close", []);
 };
 
 Keyboard.show = function() {
-    exec(null, null, "Keyboard", "show", []);
+    console.warn('Showing keyboard not supported in iOS due to platform limitations.')
+    console.warn('Instead, use input.focus(), and ensure that you have the following setting in your config.xml: \n');
+    console.warn('    <preference name="KeyboardDisplayRequiresUserAction" value="false"/>\n');
+    // exec(null, null, "Keyboard", "show", []);
 };
 
 Keyboard.disableScroll = function(disable) {

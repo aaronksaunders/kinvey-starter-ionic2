@@ -1,4 +1,5 @@
-cordova.define("cordova-plugin-file.resolveLocalFileSystemURI", function(require, exports, module) { /*
+cordova.define("cordova-plugin-file.resolveLocalFileSystemURI", function(require, exports, module) {
+/*
  *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -48,7 +49,9 @@ cordova.define("cordova-plugin-file.resolveLocalFileSystemURI", function(require
         argscheck.checkArgs('sFF', 'resolveLocalFileSystemURI', arguments);
         // error callback
         var fail = function(error) {
-            errorCallback && errorCallback(new FileError(error));
+            if (errorCallback) {
+                errorCallback(new FileError(error));
+            }
         };
         // sanity check for 'not:valid:filename' or '/not:valid:filename'
         // file.spec.12 window.resolveLocalFileSystemURI should error (ENCODING_ERR) when resolving invalid URI with leading /.

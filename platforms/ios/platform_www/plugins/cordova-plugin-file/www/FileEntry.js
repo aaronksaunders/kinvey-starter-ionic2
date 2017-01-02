@@ -1,4 +1,5 @@
-cordova.define("cordova-plugin-file.FileEntry", function(require, exports, module) { /*
+cordova.define("cordova-plugin-file.FileEntry", function(require, exports, module) {
+/*
  *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -36,7 +37,15 @@ var utils = require('cordova/utils'),
  * {FileSystem} filesystem on which the file resides (readonly)
  */
 var FileEntry = function(name, fullPath, fileSystem, nativeURL) {
-     FileEntry.__super__.constructor.apply(this, [true, false, name, fullPath, fileSystem, nativeURL]);
+    // remove trailing slash if it is present
+    if (fullPath && /\/$/.test(fullPath)) {
+        fullPath = fullPath.substring(0, fullPath.length - 1);
+    }
+    if (nativeURL && /\/$/.test(nativeURL)) {
+        nativeURL = nativeURL.substring(0, nativeURL.length - 1);
+    }
+
+    FileEntry.__super__.constructor.apply(this, [true, false, name, fullPath, fileSystem, nativeURL]);
 };
 
 utils.extend(FileEntry, Entry);
@@ -52,9 +61,13 @@ FileEntry.prototype.createWriter = function(successCallback, errorCallback) {
         var writer = new FileWriter(filePointer);
 
         if (writer.localURL === null || writer.localURL === "") {
-            errorCallback && errorCallback(new FileError(FileError.INVALID_STATE_ERR));
+            if (errorCallback) {
+                errorCallback(new FileError(FileError.INVALID_STATE_ERR));
+            }
         } else {
-            successCallback && successCallback(writer);
+            if (successCallback) {
+                successCallback(writer);
+            }
         }
     }, errorCallback);
 };

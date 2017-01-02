@@ -1,4 +1,5 @@
-cordova.define("cordova-plugin-file.requestFileSystem", function(require, exports, module) { /*
+cordova.define("cordova-plugin-file.requestFileSystem", function(require, exports, module) {
+/*
  *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -18,6 +19,7 @@ cordova.define("cordova-plugin-file.requestFileSystem", function(require, export
  * under the License.
  *
 */
+
 (function() {
     //For browser platform: not all browsers use this file.
     function checkBrowser() {
@@ -47,7 +49,9 @@ cordova.define("cordova-plugin-file.requestFileSystem", function(require, export
     var requestFileSystem = function(type, size, successCallback, errorCallback) {
         argscheck.checkArgs('nnFF', 'requestFileSystem', arguments);
         var fail = function(code) {
-            errorCallback && errorCallback(new FileError(code));
+            if (errorCallback) {
+                errorCallback(new FileError(code));
+            }
         };
 
         if (type < 0) {

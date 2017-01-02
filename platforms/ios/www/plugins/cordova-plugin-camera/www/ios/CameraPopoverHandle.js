@@ -1,4 +1,5 @@
-cordova.define("cordova-plugin-camera.CameraPopoverHandle", function(require, exports, module) { /*
+cordova.define("cordova-plugin-camera.CameraPopoverHandle", function(require, exports, module) {
+/*
  *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -33,7 +34,7 @@ var exec = require('cordova/exec');
  * - iOS
  *
  * @example
- * var cameraPopoverHandle = navigator.camera.getPicture(onSuccess, onFail,
+ * navigator.camera.getPicture(onSuccess, onFail,
  * {
  *     destinationType: Camera.DestinationType.FILE_URI,
  *     sourceType: Camera.PictureSourceType.PHOTOLIBRARY,
@@ -42,13 +43,19 @@ var exec = require('cordova/exec');
  *
  * // Reposition the popover if the orientation changes.
  * window.onorientationchange = function() {
+ *     var cameraPopoverHandle = new CameraPopoverHandle();
  *     var cameraPopoverOptions = new CameraPopoverOptions(0, 0, 100, 100, Camera.PopoverArrowDirection.ARROW_ANY);
  *     cameraPopoverHandle.setPosition(cameraPopoverOptions);
  * }
  * @module CameraPopoverHandle
  */
 var CameraPopoverHandle = function() {
-    /** Set the position of the popover.
+    /**
+     * Can be used to reposition the image selection dialog,
+     * for example, when the device orientation changes.
+     * @memberof CameraPopoverHandle
+     * @instance
+     * @method setPosition
      * @param {module:CameraPopoverOptions} popoverOptions
      */
     this.setPosition = function(popoverOptions) {

@@ -1,4 +1,5 @@
-cordova.define("cordova-plugin-file.FileSystem", function(require, exports, module) { /*
+cordova.define("cordova-plugin-file.FileSystem", function(require, exports, module) {
+/*
  *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -50,7 +51,7 @@ FileSystem.encodeURIPath = function(path) {
     // Because # is a valid filename character, it must be encoded to prevent part of the
     // path from being parsed as a URI fragment.
     return encodeURI(path).replace(/#/g, '%23');
-}
+};
 
 module.exports = FileSystem;
 
