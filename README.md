@@ -1,18 +1,17 @@
-# kinvey-starter-ionic2
+# kinvey-starter-ionic2-RC - Updated to work with latest release candidate
 
 #### Tested With Ionic Version 
 ```
-Cordova CLI: 5.4.1
-Gulp version:  CLI version 3.9.0
-Gulp local:   Local version 3.9.1
-Ionic Framework Version: 2.0.0-beta.4
-Ionic CLI Version: 2.0.0-beta.24
-Ionic App Lib Version: 2.0.0-beta.14
-ios-deploy version: 1.8.3
-ios-sim version: 3.1.1
-OS: Mac OS X El Capitan
-Node Version: v0.12.7
-Xcode version: Xcode 7.2.1 Build version 7C1002
+Cordova CLI: 6.3.0
+Ionic Framework Version: 2.0.0-rc.4
+Ionic CLI Version: 2.1.17
+Ionic App Lib Version: 2.1.7
+Ionic App Scripts Version: 0.0.47
+ios-deploy version: 1.8.6
+ios-sim version: 5.0.6
+OS: macOS Sierra
+Node Version: v5.0.0
+Xcode version: Xcode 8.2.1 Build version 8C1002
 ```
 
 #### Checkout the repo and run `npm install` to download the required node modules for the project
