@@ -25,7 +25,7 @@ Xcode version: Xcode 8.2.1 Build version 8C1002
 * See the REST API documentation here [REST API Getting Started](http://devcenter.kinvey.com/rest/guides/getting-started)
 
 ### Setup
-Edit the configuration file, [`app/services/config.ts`](https://github.com/aaronksaunders/kinvey-starter-ionic2/blob/master/app/services/config.ts) to contain the proper credentials from your kinvey account
+Edit the configuration file, [`src/providers/config.ts`](https://github.com/aaronksaunders/kinvey-starter-ionic2/blob/master/src/providers/config.ts) to contain the proper credentials from your kinvey account
 
 ```Javascript
 export let KINVEY_BASE_URL = "https://baas.kinvey.com/";
