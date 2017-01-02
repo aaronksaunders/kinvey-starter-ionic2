@@ -1,0 +1,32 @@
+<ion-header>
+  <ion-navbar>
+  <ion-title>Create New To Do Item</ion-title>
+  </ion-navbar>
+</ion-header>
+
+<ion-content padding class="addStuff">
+  <ion-list>
+
+    <ion-item >
+      <ion-label floating>title</ion-label>
+      <ion-input type="text" value="" [(ngModel)]="todo.title"></ion-input>
+    </ion-item>
+
+    <ion-item >
+      <ion-label floating>Description</ion-label>
+      <ion-input type="text" value="" [(ngModel)]="todo.description"></ion-input>
+    </ion-item>
+
+    <ion-item >
+      <ion-label floating>Status</ion-label>
+      <ion-input type="text" value="" [(ngModel)]="todo.status"></ion-input>
+    </ion-item>
+
+  </ion-list>
+  <button ion-button (click)="close(todo)">
+    Save To Do
+  </button>
+  <button  ion-button (click)="close()">
+    Cancel
+  </button>
+</ion-content>

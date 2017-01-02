@@ -1,0 +1,59 @@
+<ion-header>
+  <ion-navbar>
+    <ion-buttons start [ngSwitch]="visibleObject">
+      <button ion-button clear (click)="doShowModal()" [ngSwitch]="'todos'">
+      ADD TODO
+    </button>
+      <button ion-button clear (click)="doShowCamera()" [ngSwitch]="'images'">
+      ADD IMAGE
+    </button>
+    </ion-buttons>
+    <ion-title>
+      To Do List Page
+    </ion-title>
+    <ion-buttons end (click)="doLogout()">
+      <button ion-button>
+      LOGOUT
+    </button>
+    </ion-buttons>
+  </ion-navbar>
+</ion-header>
+
+<ion-content class="listStuff">
+  <div padding>
+    <ion-segment [(ngModel)]="visibleObject">
+      <ion-segment-button value="todos" (ionSelect)="loadData('todos')">
+        To Do's
+      </ion-segment-button>
+      <ion-segment-button value="images" (ionSelect)="loadData('images')">
+        Images
+      </ion-segment-button>
+    </ion-segment>
+  </div>
+
+  <div [ngSwitch]="visibleObject">
+    <ion-list *ngSwitchCase="'todos'">
+      <ion-card *ngFor="let item of itemList; let i = index">
+        <ion-card-header>
+          (&nbsp;{{i}}&nbsp;)&nbsp;{{item.title}}
+        </ion-card-header>
+        <ion-card-content>
+          {{item.description}}
+        </ion-card-content>
+      </ion-card>
+    </ion-list>
+
+    <ion-list *ngSwitchCase="'images'">
+      <ion-card *ngFor="let image of imageList; let i = index">
+        <ion-card-header>
+          (&nbsp;{{i}}&nbsp;)&nbsp;{{image._filename}}
+        </ion-card-header>
+        <img src={{image._downloadURL}}/>
+        <ion-card-content>
+          {{image._downloadURL}}
+        </ion-card-content>
+      </ion-card>
+    </ion-list>
+  </div>
+
+</ion-content>
