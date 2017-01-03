@@ -33,7 +33,7 @@
 
   <div [ngSwitch]="visibleObject">
     <ion-list *ngSwitchCase="'todos'">
-      <ion-card *ngFor="let item of itemList; let i = index">
+      <ion-card *ngFor="let item of itemList ; let i = index">
         <ion-card-header>
           (&nbsp;{{i}}&nbsp;)&nbsp;{{item.title}}
         </ion-card-header>
@@ -44,7 +44,7 @@
     </ion-list>
 
     <ion-list *ngSwitchCase="'images'">
-      <ion-card *ngFor="let image of imageList; let i = index">
+      <ion-card *ngFor="let image of imageList ; let i = index">
         <ion-card-header>
           (&nbsp;{{i}}&nbsp;)&nbsp;{{image._filename}}
         </ion-card-header>

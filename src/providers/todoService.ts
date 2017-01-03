@@ -2,20 +2,42 @@
 import { Injectable } from '@angular/core';
 import { Http, Headers } from '@angular/http';
 import 'rxjs/RX';
-import  'isomorphic-fetch';
-import {Camera, File } from 'ionic-native';
+import 'isomorphic-fetch';
+import { Camera, File } from 'ionic-native';
+
+import { Observable } from 'rxjs/Observable';
 
 declare var cordova: any;
 declare var window: any;
 declare var fetch: any;
+declare var Kinvey: any
 
-import {KINVEY_BASE_URL, KINVEY_AUTH} from './config';
+import { KINVEY_BASE_URL, KINVEY_AUTH } from './config';
 
 
+/**
+ * 
+ * 
+ * @export
+ * @class ToDoService
+ */
 @Injectable()
 export class ToDoService {
+    /**
+     * 
+     * 
+     * @type {string}
+     * @memberOf ToDoService
+     */
     token: string;
 
+    /**
+     * Creates an instance of ToDoService.
+     * 
+     * @param {Http} http
+     * 
+     * @memberOf ToDoService
+     */
     constructor(public http: Http) {
         this.token = localStorage.getItem('token');
     }
@@ -33,6 +55,16 @@ export class ToDoService {
     *
     * @returns {Promise}
     */
+    /**
+     * 
+     * 
+     * @param {any} _data
+     * @param {any} _imageData
+     * @param {any} _size
+     * @returns
+     * 
+     * @memberOf ToDoService
+     */
     _uploadPhotoUsingGoogleURL(_data, _imageData, _size) {
         try {
             let url = _data._uploadURL
@@ -45,7 +77,7 @@ export class ToDoService {
                 method: "PUT",
                 headers: headers,
                 body: _imageData
-            }).then(function(_result) {
+            }).then(function (_result) {
                 console.log("fetch: ", _result)
                 alert("File Successfully Saved");
                 return _result
@@ -65,6 +97,15 @@ export class ToDoService {
     *
     * @returns {Promise}
     */
+    /**
+     * 
+     * 
+     * @param {any} _imageData
+     * @param {any} _size
+     * @returns
+     * 
+     * @memberOf ToDoService
+     */
     _uploadPhotoToKinvey(_imageData, _size) {
         var that = this;
         try {
@@ -85,12 +126,12 @@ export class ToDoService {
                 method: "POST",
                 headers: headers,
                 body: params
-            }).then(function(_result) {
+            }).then(function (_result) {
                 return _result.json()
-            }).then(function(_data) {
+            }).then(function (_data) {
                 console.log("fetch: ", _data)
                 return that._uploadPhotoUsingGoogleURL(_data, _imageData, _size)
-            }, function(_error) {
+            }, function (_error) {
                 console.log("fetch error: ", _error)
                 return _error
             })
@@ -104,32 +145,51 @@ export class ToDoService {
     * into a byteArray so that it can be uploaded
     *
     */
+    /**
+     * 
+     * 
+     * @param {any} _fileInfo
+     * @param {any} _that
+     * @param {any} _callback
+     * 
+     * @memberOf ToDoService
+     */
     _readImageFileFromCamera(_fileInfo, _that, _callback) {
         try {
             var fileReader: FileReader = new cordova.FileReader();
 
-            fileReader.onloadend = function(evt:any) {
+            /**
+             * 
+             * 
+             * @param {*} evt
+             */
+            fileReader.onloadend = function (evt: any) {
                 var array = evt.target.result
                 var len = array.byteLength
 
-                _that._uploadPhotoToKinvey(array, len).then(function(_result) {
+                _that._uploadPhotoToKinvey(array, len).then(function (_result) {
                     _callback({
                         success: true,
                         result: _result
                     })
-                }, function(_error) {
+                }, function (_error) {
                     throw _error
                 })
             }
 
-            fileReader.onerror = function(_error) {
+            /**
+             * 
+             * 
+             * @param {any} _error
+             */
+            fileReader.onerror = function (_error) {
                 console.log(_error)
                 throw _error
             }
 
-            _fileInfo.file(function(s) {
+            _fileInfo.file(function (s) {
                 fileReader.readAsArrayBuffer(s);
-            }, function(_error) {
+            }, function (_error) {
                 throw _error
             })
         } catch (EE) {
@@ -146,6 +206,13 @@ export class ToDoService {
     *
     * @param _callback {Function} called when the process is complete
     */
+    /**
+     * 
+     * 
+     * @param {any} _callback
+     * 
+     * @memberOf ToDoService
+     */
     addPhoto(_callback) {
         let that = this
 
@@ -159,10 +226,10 @@ export class ToDoService {
 
         Camera.getPicture(options).then((imageURI) => {
             window.resolveLocalFileSystemURL(imageURI,
-                function(_file) {
+                function (_file) {
                     that._readImageFileFromCamera(_file, that, _callback)
                 },
-                function(_error) {
+                function (_error) {
                     _callback({
                         success: false,
                         result: _error
@@ -178,6 +245,14 @@ export class ToDoService {
 
     }
 
+    /**
+     * 
+     * 
+     * @param {any} _item
+     * @returns
+     * 
+     * @memberOf ToDoService
+     */
     addItem(_item) {
         let url = KINVEY_BASE_URL + 'appdata/kid1781/todo-collection'
         let params = JSON.stringify(_item)
@@ -193,30 +268,37 @@ export class ToDoService {
                 return data
             });
     }
+    /**
+     * 
+     * 
+     * @returns
+     * 
+     * @memberOf ToDoService
+     */
     getAllImages() {
-        return this.http.get(KINVEY_BASE_URL + 'blob/kid1781', {
-            headers: new Headers({
-                'Content-Type': 'application/json',
-                'Authorization': 'Kinvey ' + this.token,
-                'X-Kinvey-API-Version': 3
-            })
-        })
-            .map((res: any) => {
-                let data = res.json();
-                return data
-            });
+        return new Observable(observer => {
+            var query = new Kinvey.Query();
+            Kinvey.Files.find(query)
+                .then((files) => {
+                    observer.next(files);
+                    observer.complete();
+                })
+                .catch(function (error) {
+                    console.log(error)
+                    observer.next(error);
+                    observer.complete();
+                });
+        });
     }
+    /**
+     * 
+     * 
+     * @returns
+     * 
+     * @memberOf ToDoService
+     */
     getAllItems() {
-        return this.http.get(KINVEY_BASE_URL + 'appdata/kid1781/todo-collection', {
-            headers: new Headers({
-                'Content-Type': 'application/json',
-                'Authorization': 'Kinvey ' + this.token,
-                'X-Kinvey-API-Version': 3
-            })
-        })
-            .map((res: any) => {
-                let data = res.json();
-                return data
-            });
+        let dataStore = Kinvey.DataStore.collection('todo-collection');
+        return dataStore.find()
     }
 }

@@ -11,6 +11,7 @@ import { AddStuffModal } from '../pages/listStuff/addStuffModal';
 
 // PROVIDERS 
 import { Authentication } from '../providers/authentication'
+import { JSAuthentication } from '../providers/_authentication'
 @NgModule({
   declarations: [
     MyApp,
@@ -30,6 +31,6 @@ import { Authentication } from '../providers/authentication'
     ListStuffPage,
     AddStuffModal
   ],
-  providers: [Authentication, { provide: ErrorHandler, useClass: IonicErrorHandler }]
+  providers: [Authentication, JSAuthentication, { provide: ErrorHandler, useClass: IonicErrorHandler }]
 })
 export class AppModule { }
