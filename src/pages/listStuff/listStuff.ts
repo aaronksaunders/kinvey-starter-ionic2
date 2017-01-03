@@ -110,14 +110,14 @@ export class ListStuffPage {
       console.log(data)
       if (data) {
         // add item and refresh view
-        this.tdService.addItem(data).subscribe(
+        let s = this.tdService.addItem(data).subscribe(
           (data) => {
             console.log('Item Added', data)
             alert("New Item Added To List")
             this.loadData(this.visibleObject)
           },
           (err) => console.log("Error Adding Item:", JSON.parse(err._body).description),
-          () => { console.log("All Good With The Data") }
+          () => { s.unsubscribe() }
         );
       }
     });
@@ -149,7 +149,7 @@ export class ListStuffPage {
         this.nav.setRoot(LoginPage, {});
       },
       (err) => console.log("Error Logging Out:", JSON.parse(err._body).description),
-      () => { s.unsubscribe()}
+      () => { s.unsubscribe() }
     );
   }
 }
