@@ -132,8 +132,10 @@ export class ListStuffPage {
    * @memberOf ListStuffPage
    */
   doShowCamera() {
-    this.tdService.addPhoto((result) => {
+    this.tdService.addPhoto().then((result) => {
       console.log("doShowCamera", result)
+    }, (_error) => {
+      alert(_error)
     })
   }
 
