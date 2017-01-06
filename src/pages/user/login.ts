@@ -2,7 +2,7 @@ import { NavController } from 'ionic-angular';
 import { Component } from '@angular/core';
 import { CreateAccountPage } from '../createAccount/createAccount';
 import { ListStuffPage } from '../listStuff/listStuff';
-import { JSAuthentication } from '../../providers/_authentication';
+import { Authentication } from '../../providers/authentication';
 
 @Component({
   templateUrl: 'login.html',
@@ -13,7 +13,7 @@ export class LoginPage {
   username
   password
 
-  constructor(public nav: NavController, public auth: JSAuthentication) {
+  constructor(public nav: NavController, public auth: Authentication) {
     //This will hold data from our form
     this.username = null;
     this.password = null;

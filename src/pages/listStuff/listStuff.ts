@@ -1,7 +1,7 @@
 import { Component, NgZone } from '@angular/core';
 import { NavController, NavParams, IonicApp, ModalController } from 'ionic-angular';
 import { ToDoService } from '../../providers/todoService';
-import { JSAuthentication } from '../../providers/_authentication';
+import { Authentication } from '../../providers/authentication';
 import { LoginPage } from '../../pages/user/login';
 import { AddStuffModal } from '../../pages/listStuff/addStuffModal';
 
@@ -52,7 +52,7 @@ export class ListStuffPage {
    * @memberOf ListStuffPage
    */
   constructor(app: IonicApp, nav: NavController, navParams: NavParams,
-    public auth: JSAuthentication,
+    public auth: Authentication,
     public tdService: ToDoService,
     private modalCtrl: ModalController,
     private ngZone: NgZone) {
