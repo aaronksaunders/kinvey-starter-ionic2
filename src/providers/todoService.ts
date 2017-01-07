@@ -169,6 +169,33 @@ export class ToDoService {
         });
 
     }
+
+    deleteItem(_itemType:string, _item: any) {
+
+        if (_itemType === 'todo') {
+            return new Observable(observer => {
+                let dataStore = Kinvey.DataStore.collection('todo-collection');
+                dataStore.removeById(_item._id).then((_result) => {
+                    observer.next(_result);
+                    observer.complete();
+                }).catch((error) => {
+                    console.log(error)
+                    Observable.throw(error);
+                });
+            });
+        } else {
+            return new Observable(observer => {
+                Kinvey.Files.removeById(_item._id).then((_result) => {
+                    observer.next(_result);
+                    observer.complete();
+                },(_error)=>{
+                    console.log(_error);
+                    observer.error(_error);
+                })
+            });
+        }
+
+    }
     /**
      * 
      * 

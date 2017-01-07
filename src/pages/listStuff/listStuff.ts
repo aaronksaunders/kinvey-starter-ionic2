@@ -5,6 +5,7 @@ import { Authentication } from '../../providers/authentication';
 import { LoginPage } from '../../pages/user/login';
 import { AddStuffModal } from '../../pages/listStuff/addStuffModal';
 
+
 /**
  * 
  * 
@@ -14,7 +15,7 @@ import { AddStuffModal } from '../../pages/listStuff/addStuffModal';
 @Component({
   templateUrl: 'listStuff.html',
   providers: [ToDoService],
-  //directives: [NgFor],
+
 })
 
 export class ListStuffPage {
@@ -62,6 +63,25 @@ export class ListStuffPage {
     this.loadData("todos")
   }
 
+  onDeleteItem(_item, _itemType) {
+    console.log(`deleting a ${_itemType} `, _item)
+    this.tdService.deleteItem(_itemType, _item).subscribe(
+      (data) => {
+        console.log('deleteItem', data);
+        this.loadData(this.visibleObject)
+      },
+      (err) => {
+        console.log("Error deleting Data:", err)
+        alert(err.message)
+      }
+    )
+  }
+
+
+  trackItem(_index, _item) {
+    return _item ? _item._id : undefined;
+  }
+
   /**
    * 
    * 
@@ -77,7 +97,6 @@ export class ListStuffPage {
           this.ngZone.run(() => this.itemList = data)
         },
         (err) => console.log("Error Retrieving Data:", JSON.parse(err._body).description),
-        () => { console.log("All Good With The Data") }
       );
     }
 
