@@ -21,16 +21,16 @@ Xcode version: Xcode 8.2.1 Build version 8C1002
 * File
 
 ### Create Account w/ Kinvey
-* We are using the REST API in this project not the angular module
-* See the REST API documentation here [REST API Getting Started](http://devcenter.kinvey.com/rest/guides/getting-started)
+* We are using the Javascript API in this project not the angular module
+* When I upgraded to Ionic2 and the Kinvey JS API I did leave the original REST API code in the project if you are looking for that solution also
 
 ### Setup
 Edit the configuration file, [`src/providers/config.ts`](https://github.com/aaronksaunders/kinvey-starter-ionic2/blob/master/src/providers/config.ts) to contain the proper credentials from your kinvey account
 
 ```Javascript
 export let KINVEY_BASE_URL = "https://baas.kinvey.com/";
-let appKey = "YOUR-APP-KEY-GOES-HERE"
-let secretKey = "YOUR-SECRET-KEY-GOES-HERE"
+export let appKey = "YOUR-APP-KEY-GOES-HERE"
+export let secretKey = "YOUR-SECRET-KEY-GOES-HERE"
 export let KINVEY_AUTH = btoa(appKey + ':' + secretKey)
 ```
 
