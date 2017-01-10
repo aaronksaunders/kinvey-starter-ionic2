@@ -49,12 +49,10 @@ export class Authentication {
                 this.token = user._kmd.authtoken;
                 localStorage.setItem('token', this.token);
                 observer.next(user);
-                return user;
-            }).then(function onSuccess(user) {
                 observer.complete();
-            }).catch(function onError(error) {
-                console.log(error)
-                Observable.throw(error)
+            }).catch((error) => {
+                console.log("createUser", error)
+                observer.error(error);
             });
         });
     }
@@ -69,7 +67,7 @@ export class Authentication {
                 observer.complete();
             }).catch((error) => {
                 console.log(error)
-                Observable.throw(error)
+                observer.error(error);
             });
 
         })
@@ -87,7 +85,7 @@ export class Authentication {
                 observer.complete();
             }).catch((error) => {
                 console.log(error)
-                Observable.throw(error)
+                observer.error(error);
             });
 
         })

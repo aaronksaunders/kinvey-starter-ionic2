@@ -163,14 +163,13 @@ export class ToDoService {
                 observer.complete();
             }).catch((error) => {
                 console.log(error)
-                console.log(error)
-                Observable.throw(error);
+                observer.error(error);
             });
         });
 
     }
 
-    deleteItem(_itemType:string, _item: any) {
+    deleteItem(_itemType: string, _item: any) {
 
         if (_itemType === 'todo') {
             return new Observable(observer => {
@@ -180,7 +179,7 @@ export class ToDoService {
                     observer.complete();
                 }).catch((error) => {
                     console.log(error)
-                    Observable.throw(error);
+                    observer.error(error);
                 });
             });
         } else {
@@ -188,7 +187,7 @@ export class ToDoService {
                 Kinvey.Files.removeById(_item._id).then((_result) => {
                     observer.next(_result);
                     observer.complete();
-                },(_error)=>{
+                }, (_error) => {
                     console.log(_error);
                     observer.error(_error);
                 })
@@ -213,7 +212,7 @@ export class ToDoService {
                 })
                 .catch(function (error) {
                     console.log(error)
-                    Observable.throw(error);
+                    observer.error(error);
                 });
         });
     }

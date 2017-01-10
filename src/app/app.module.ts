@@ -30,7 +30,8 @@ import { Authentication } from '../providers/authentication'
     MyApp,
     LoginPage,
     ListStuffPage,
-    AddStuffModal
+    AddStuffModal,
+    CreateAccountPage
   ],
   providers: [Authentication, { provide: ErrorHandler, useClass: IonicErrorHandler }]
 })

@@ -1,30 +1,34 @@
+<ion-header>
+  <ion-navbar>
+    <ion-title>
+      Create New Account
+    </ion-title>
+  </ion-navbar>
+</ion-header>
 
-<ion-navbar *navbar>
-  <ion-title>
-    Create New Account
-  </ion-title>
-</ion-navbar>
-
-<ion-content class="createAccount">
+<ion-content class="createAccount" padding>
   <ion-list>
-    <ion-item >
+    <ion-item>
       <ion-label floating>First Name</ion-label>
       <ion-input type="text" value="" [(ngModel)]="creds.first_name"></ion-input>
     </ion-item>
-    <ion-item >
+    <ion-item>
       <ion-label floating>Last Name</ion-label>
       <ion-input type="text" value="" [(ngModel)]="creds.last_name"></ion-input>
     </ion-item>
-    <ion-item >
+    <ion-item>
       <ion-label floating>Username</ion-label>
       <ion-input type="text" value="" [(ngModel)]="creds.username"></ion-input>
     </ion-item>
-    <ion-item >
+    <ion-item>
       <ion-label floating>Password</ion-label>
       <ion-input type="password" value="" [(ngModel)]="creds.password"></ion-input>
     </ion-item>
   </ion-list>
-  <button class="button button-block padding" (click)="createAccountClicked($event)">
+  <button ion-button (click)="createAccountClicked($event)">
     Create Account
+  </button>
+  <button ion-button (click)="cancelClicked($event)">
+    Cancel
   </button>
 </ion-content>
