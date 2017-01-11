@@ -70,5 +70,15 @@
         },
         "is_top_level": true,
         "variables": {}
+    },
+    "cordova-plugin-contacts": {
+        "source": {
+            "type": "registry",
+            "id": "cordova-plugin-contacts"
+        },
+        "is_top_level": true,
+        "variables": {
+            "CONTACTS_USAGE_DESCRIPTION": " "
+        }
     }
 }

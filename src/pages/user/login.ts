@@ -2,18 +2,44 @@ import { NavController } from 'ionic-angular';
 import { Component } from '@angular/core';
 import { CreateAccountPage } from '../createAccount/createAccount';
 import { ListStuffPage } from '../listStuff/listStuff';
-import { JSAuthentication } from '../../providers/_authentication';
+import { Authentication } from '../../providers/authentication';
 
+/**
+ * 
+ * 
+ * @export
+ * @class LoginPage
+ */
 @Component({
   templateUrl: 'login.html',
 })
 
 export class LoginPage {
 
+  /**
+   * 
+   * 
+   * 
+   * @memberOf LoginPage
+   */
   username
+  /**
+   * 
+   * 
+   * 
+   * @memberOf LoginPage
+   */
   password
 
-  constructor(public nav: NavController, public auth: JSAuthentication) {
+  /**
+   * Creates an instance of LoginPage.
+   * 
+   * @param {NavController} nav
+   * @param {Authentication} auth
+   * 
+   * @memberOf LoginPage
+   */
+  constructor(public nav: NavController, public auth: Authentication) {
     //This will hold data from our form
     this.username = null;
     this.password = null;
@@ -21,12 +47,25 @@ export class LoginPage {
     this.checkAuth()
   }
 
+  /**
+   * 
+   * 
+   * 
+   * @memberOf LoginPage
+   */
   checkAuth() {
     if (localStorage.getItem('token')) {
       this.nav.setRoot(ListStuffPage, {});
     }
   }
 
+  /**
+   * 
+   * 
+   * @param {any} event
+   * 
+   * @memberOf LoginPage
+   */
   loginClicked(event) {
     console.log('You selected', event);
 
@@ -43,6 +82,13 @@ export class LoginPage {
       );
   }
 
+  /**
+   * 
+   * 
+   * @param {any} event
+   * 
+   * @memberOf LoginPage
+   */
   createAccountClicked(event) {
     console.log('You selected', event);
     this.nav.push(CreateAccountPage, {});

@@ -1,73 +1,93 @@
+
 import { Injectable } from '@angular/core';
-import { Http, Headers } from '@angular/http';
+import { Http } from '@angular/http';
+import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/operator/map';
 
-import {KINVEY_BASE_URL, KINVEY_AUTH} from './config';
+import { appKey, secretKey } from './config';
+
+declare var Kinvey: any
 
 @Injectable()
 export class Authentication {
-  token: string;
+    token: string;
 
-  constructor(public http: Http) {
-    this.token = localStorage.getItem('token');
-  }
+    constructor(public http: Http) {
+        Kinvey.initialize({
+            appKey: appKey,
+            appSecret: secretKey
+        }).then((activeUser) => {
+            // ...
+            console.log(` the active user is ${activeUser}`)
 
-  createUser(userInfo) {
-    let params = JSON.stringify({
-      username: userInfo.username,
-      password: userInfo.password,
-      first_name : userInfo.first_name,
-      last_name : userInfo.last_name
-    });
-    return this.http.post(KINVEY_BASE_URL + 'user/kid1781/', params, {
-      headers: new Headers({
-        'Content-Type': 'application/json',
-        'Authorization': 'Basic ' + KINVEY_AUTH,
-        'X-Kinvey-API-Version': 3
-      })
-    })
-      .map((res: any) => {
-      let data = res.json();
-      this.token = data._kmd.authtoken;
-      localStorage.setItem('token', this.token);
-      return data
-    });
-  }
+            if (activeUser) {
+                this.token = activeUser._kmd.authtoken;
+                localStorage.setItem('token', this.token);
+            } else {
+                this.token = undefined;
+                localStorage.removeItem('token');
+            }
 
-  login(username: String, password: String) {
+        }).catch(function (error) {
+            // ...
+        })
+        this.token = localStorage.getItem('token');
+    }
 
-    let params = JSON.stringify({
-      username: username,
-      password: password
-    });
-    return this.http.post(KINVEY_BASE_URL + 'user/kid1781/login', params, {
-      headers: new Headers({
-        'Content-Type': 'application/json',
-        'Authorization': 'Basic ' + KINVEY_AUTH,
-        'X-Kinvey-API-Version': 3
-      })
-    })
-      .map((res: any) => {
-      let data = res.json();
-      this.token = data._kmd.authtoken;
-      localStorage.setItem('token', this.token);
-      return data
-    });
-  };
+    createUser(userInfo) {
+        let params = JSON.stringify({
+            username: userInfo.username,
+            password: userInfo.password,
+            first_name: userInfo.first_name,
+            last_name: userInfo.last_name
+        });
 
-  logout() {
-    let params = JSON.stringify({});
-     return this.http.post(KINVEY_BASE_URL + 'user/kid1781/_logout', params, {
-       headers: new Headers({
-         'Content-Type': 'application/json',
-        'Authorization': 'Kinvey ' + this.token,
-         'X-Kinvey-API-Version': 3
-       })
-     })
-       .map((res: any) => {
-       this.token = undefined;
-       localStorage.removeItem('token');
-       return true
-     });
-  }
+        var user = new Kinvey.User();
+        return new Observable(observer => {
+            user.signup(params).then((user) => {
+                localStorage.setItem('newUser', JSON.stringify(user.toJSON()));
+                this.token = user._kmd.authtoken;
+                localStorage.setItem('token', this.token);
+                observer.next(user);
+                observer.complete();
+            }).catch((error) => {
+                console.log("createUser", error)
+                observer.error(error);
+            });
+        });
+    }
+
+    login(username: String, password: String) {
+
+        return new Observable(observer => {
+            Kinvey.User.login(username, password).then((user) => {
+                this.token = user._kmd.authtoken;
+                localStorage.setItem('token', this.token);
+                observer.next(user);
+                observer.complete();
+            }).catch((error) => {
+                console.log(error)
+                observer.error(error);
+            });
+
+        })
+    };
+
+    logout() {
+        return new Observable(observer => {
+            Kinvey.User.logout().then((user) => {
+
+                // clean up the token
+                this.token = undefined;
+                localStorage.removeItem('token');
+
+                observer.next();
+                observer.complete();
+            }).catch((error) => {
+                console.log(error)
+                observer.error(error);
+            });
+
+        })
+    }
 }

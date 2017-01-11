@@ -1,12 +1,13 @@
 import { Component, NgZone } from '@angular/core';
-import { NavController, NavParams, IonicApp, ModalController } from 'ionic-angular';
+import { NavController, NavParams, IonicApp, ModalController, AlertController } from 'ionic-angular';
 import { ToDoService } from '../../providers/todoService';
-import { JSAuthentication } from '../../providers/_authentication';
+import { Authentication } from '../../providers/authentication';
 import { LoginPage } from '../../pages/user/login';
 import { AddStuffModal } from '../../pages/listStuff/addStuffModal';
 
+
+
 /**
- * 
  * 
  * @export
  * @class ListStuffPage
@@ -14,10 +15,11 @@ import { AddStuffModal } from '../../pages/listStuff/addStuffModal';
 @Component({
   templateUrl: 'listStuff.html',
   providers: [ToDoService],
-  //directives: [NgFor],
+
 })
 
 export class ListStuffPage {
+
   /**
    * 
    * @memberOf ListStuffPage
@@ -27,32 +29,41 @@ export class ListStuffPage {
    * 
    * @memberOf ListStuffPage
    */
+  /**
+   * 
+   * @memberOf ListStuffPage
+   */
   itemList
+
   /**
    * 
    * @memberOf ListStuffPage
    */
   visibleObject
+
   /**
    * 
    * @memberOf ListStuffPage
    */
   imageList
 
+
   /**
    * Creates an instance of ListStuffPage.
    * 
+   * @param {AlertController} alertCtrl
    * @param {IonicApp} app
    * @param {NavController} nav
    * @param {NavParams} navParams
-   * @param {JSAuthentication} auth
+   * @param {Authentication} auth
    * @param {ToDoService} tdService
    * @param {ModalController} modalCtrl
+   * @param {NgZone} ngZone
    * 
    * @memberOf ListStuffPage
    */
-  constructor(app: IonicApp, nav: NavController, navParams: NavParams,
-    public auth: JSAuthentication,
+  constructor(private alertCtrl :AlertController ,app: IonicApp, nav: NavController, navParams: NavParams,
+    public auth: Authentication,
     public tdService: ToDoService,
     private modalCtrl: ModalController,
     private ngZone: NgZone) {
@@ -61,6 +72,61 @@ export class ListStuffPage {
     this.visibleObject = "todos"
     this.loadData("todos")
   }
+
+  /**
+   * 
+   * 
+   * @param {any} _message
+   * @param {any} [_title]
+   * 
+   * @memberOf ListStuffPage
+   */
+  customAlert(_message, _title?) {
+    let alert = this.alertCtrl.create({
+      title: _title || 'ERROR',
+      subTitle: _message,
+      buttons: ['OK']
+    });
+    alert.present();
+  }
+
+  /**
+   * 
+   * 
+   * @param {any} _item
+   * @param {any} _itemType
+   * 
+   * @memberOf ListStuffPage
+   */
+  onDeleteItem(_item, _itemType) {
+    console.log(`deleting a ${_itemType} `, _item)
+    this.tdService.deleteItem(_itemType, _item).subscribe(
+      (data) => {
+        console.log('deleteItem', data);
+        this.loadData(this.visibleObject)
+      },
+      (err) => {
+        console.log("Error deleting Data:", err)
+        this.customAlert(err.message)
+      }
+    )
+  }
+
+
+
+  /**
+   * 
+   * 
+   * @param {any} _index
+   * @param {any} _item
+   * @returns
+   * 
+   * @memberOf ListStuffPage
+   */
+  trackItem(_index, _item) {
+    return _item ? _item._id : undefined;
+  }
+
 
   /**
    * 
@@ -77,7 +143,6 @@ export class ListStuffPage {
           this.ngZone.run(() => this.itemList = data)
         },
         (err) => console.log("Error Retrieving Data:", JSON.parse(err._body).description),
-        () => { console.log("All Good With The Data") }
       );
     }
 
@@ -96,6 +161,7 @@ export class ListStuffPage {
     this.visibleObject = _visibleObject
   }
 
+
   /**
    * 
    * 
@@ -109,11 +175,11 @@ export class ListStuffPage {
     myModal.onDidDismiss(data => {
       console.log(data)
       if (data) {
-        // add item and refresh view
+
         let s = this.tdService.addItem(data).subscribe(
           (data) => {
             console.log('Item Added', data)
-            alert("New Item Added To List")
+            this.customAlert("New Item Added To List", "Success")
             this.loadData(this.visibleObject)
           },
           (err) => console.log("Error Adding Item:", JSON.parse(err._body).description),
@@ -132,8 +198,10 @@ export class ListStuffPage {
    * @memberOf ListStuffPage
    */
   doShowCamera() {
-    this.tdService.addPhoto((result) => {
+    this.tdService.addPhoto().then((result) => {
       console.log("doShowCamera", result)
+    }, (_error) => {
+      this.customAlert(_error)
     })
   }
 
