@@ -39,7 +39,9 @@
     "cordova-plugin-splashscreen",
     "ionic-plugin-keyboard",
     "cordova-plugin-file",
-    "cordova-plugin-camera"
+    "cordova-plugin-compat",
+    "cordova-plugin-camera",
+    "cordova-plugin-contacts"
   ],
   "cordovaPlatforms": [
     "ios",
@@ -47,6 +49,11 @@
       "platform": "ios",
       "version": "",
       "locator": "ios"
+    },
+    {
+      "platform": "android",
+      "version": "",
+      "locator": "android"
     }
   ],
   "description": "kinvey-starter-ionic2C: An Ionic project"
