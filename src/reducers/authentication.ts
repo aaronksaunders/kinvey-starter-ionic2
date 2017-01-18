@@ -15,15 +15,32 @@ export const AuthActions = {
     LOGOUT_FAILED: 'LOGOUT_FAILED',
     CHECK_AUTH_SUCCESS: 'CHECK_AUTH_SUCCESS',
     CHECK_AUTH_FAILED: 'CHECK_AUTH_FAILED',
-    CHECK_AUTH_SUCCESS_NO_USER: 'CHECK_AUTH_SUCCESS_NO_USER'
+    CHECK_AUTH_SUCCESS_NO_USER: 'CHECK_AUTH_SUCCESS_NO_USER',
+    INIT_KINVEY: 'INIT_KINVEY',
+    INIT_KINVEY_SUCCESS: 'INIT_KINVEY_SUCCESS',
+    INIT_KINVEY_SUCCESS_NO_USER: 'INIT_KINVEY_SUCCESS_NO_USER',
+    INIT_KINVEY_FAILED: 'INIT_KINVEY_FAILED'
 }
 
 
 export const AuthenticationReducer: any = (state = {}, action: Action) => {
     console.log(state, action)
     switch (action.type) {
+
+        case AuthActions.INIT_KINVEY: {
+            return Object.assign({}, state, { inProgress: true })
+        }
+        case AuthActions.INIT_KINVEY_FAILED: {
+            return Object.assign({}, state, { inProgress: false, error: action.payload })
+        }
+        case AuthActions.INIT_KINVEY_SUCCESS: {
+            return Object.assign({}, state, { inProgress: false, kinveyInitialized: true, error: null, user: action.payload })
+        }
+        case AuthActions.INIT_KINVEY_SUCCESS_NO_USER: {
+            return Object.assign({}, state, { inProgress: false, kinveyInitialized: true, error: null })
+        }
         case AuthActions.LOGIN: {
-            return Object.assign({}, { inProgress: true, isLoggedIn: false })
+            return Object.assign({}, state, { inProgress: true, isLoggedIn: false })
         }
         case AuthActions.LOGOUT: {
             return Object.assign({}, state, { inProgress: true, isLoggedIn: true })
@@ -31,7 +48,7 @@ export const AuthenticationReducer: any = (state = {}, action: Action) => {
 
         case AuthActions.CHECK_AUTH_SUCCESS:
         case AuthActions.LOGIN_SUCCESS: {
-            return Object.assign({}, { user: action.payload, isLoggedIn: true })
+            return Object.assign({}, state, { inProgress: false, user: action.payload, isLoggedIn: true })
         }
 
         case AuthActions.CHECK_AUTH_FAILED:
@@ -41,16 +58,16 @@ export const AuthenticationReducer: any = (state = {}, action: Action) => {
 
 
         case AuthActions.LOGOUT_FAILED: {
-            return Object.assign({}, state, { error: action.payload, isLoggedIn: true })
+            return Object.assign({}, state, { inProgress: false, error: action.payload, isLoggedIn: true })
         }
 
         case AuthActions.CHECK_AUTH_SUCCESS_NO_USER:
         case AuthActions.LOGOUT_SUCCESS: {
-            return Object.assign({}, { user: null, isLoggedIn: false })
+            return Object.assign({}, state, { inProgress: false, user: null, isLoggedIn: false })
         }
 
         case AuthActions.CHECK_AUTH: {
-            return Object.assign({}, { inProgress: true, isLoggedIn: false })
+            return Object.assign({}, state, { inProgress: true, isLoggedIn: false })
         }
 
         default:
