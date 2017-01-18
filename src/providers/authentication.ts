@@ -34,6 +34,27 @@ export class Authentication {
         this.token = localStorage.getItem('token');
     }
 
+    checkActiveUser() {
+        return new Observable(observer => {
+            setTimeout(() => {
+                let activeUser = Kinvey.User.getActiveUser()
+                var promise = Promise.resolve(activeUser);
+                if (activeUser !== null) {
+                    promise = activeUser.me();
+                }
+
+                promise.then((user) => {
+                    observer.next(user);
+                    observer.complete();
+                }).catch(function (error) {
+                    console.log("checkActveUser", error)
+                    observer.error(error);
+                });
+            }, 1000);
+        });
+
+    }
+
     createUser(userInfo) {
         let params = JSON.stringify({
             username: userInfo.username,
@@ -57,10 +78,10 @@ export class Authentication {
         });
     }
 
-    login(username: String, password: String) {
+    login(_params) {
 
         return new Observable(observer => {
-            Kinvey.User.login(username, password).then((user) => {
+            Kinvey.User.login(_params.username, _params.password).then((user) => {
                 this.token = user._kmd.authtoken;
                 localStorage.setItem('token', this.token);
                 observer.next(user);

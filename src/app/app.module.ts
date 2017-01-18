@@ -1,3 +1,4 @@
+import { AuthEffects } from './../reducers/authentication.effects';
 import { NgModule, ErrorHandler } from '@angular/core';
 import { IonicApp, IonicModule, IonicErrorHandler } from 'ionic-angular';
 import { MyApp } from './app.component';
@@ -10,8 +11,14 @@ import { ListStuffPage } from '../pages/listStuff/listStuff';
 import { AddStuffModal } from '../pages/listStuff/addStuffModal';
 
 // PROVIDERS 
-
 import { Authentication } from '../providers/authentication'
+
+import { AuthenticationReducer } from './../reducers/authentication';
+import { StoreModule } from '@ngrx/store';
+import { EffectsModule } from '@ngrx/effects';
+import { StoreDevtoolsModule } from '@ngrx/store-devtools';
+
+
 
 @NgModule({
   declarations: [
@@ -23,7 +30,10 @@ import { Authentication } from '../providers/authentication'
     AddStuffModal
   ],
   imports: [
-    IonicModule.forRoot(MyApp)
+    IonicModule.forRoot(MyApp),
+    StoreModule.provideStore({ auth: AuthenticationReducer }),
+    EffectsModule.run(AuthEffects),
+    StoreDevtoolsModule.instrumentOnlyWithExtension()
   ],
   bootstrap: [IonicApp],
   entryComponents: [

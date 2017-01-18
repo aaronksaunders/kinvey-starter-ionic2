@@ -1,9 +1,11 @@
 import { Component, NgZone } from '@angular/core';
-import { NavController, NavParams, IonicApp, ModalController, AlertController } from 'ionic-angular';
+import { NavController, ModalController, AlertController } from 'ionic-angular';
 import { ToDoService } from '../../providers/todoService';
-import { Authentication } from '../../providers/authentication';
 import { LoginPage } from '../../pages/user/login';
 import { AddStuffModal } from '../../pages/listStuff/addStuffModal';
+
+import { Store } from '@ngrx/store';
+import { AuthActions } from '../../reducers/authentication';
 
 
 
@@ -52,7 +54,6 @@ export class ListStuffPage {
    * Creates an instance of ListStuffPage.
    * 
    * @param {AlertController} alertCtrl
-   * @param {IonicApp} app
    * @param {NavController} nav
    * @param {NavParams} navParams
    * @param {Authentication} auth
@@ -62,15 +63,31 @@ export class ListStuffPage {
    * 
    * @memberOf ListStuffPage
    */
-  constructor(private alertCtrl :AlertController ,app: IonicApp, nav: NavController, navParams: NavParams,
-    public auth: Authentication,
+  constructor(private alertCtrl: AlertController, nav: NavController,
     public tdService: ToDoService,
     private modalCtrl: ModalController,
+    private store: Store<any>,
     private ngZone: NgZone) {
     this.nav = nav;
 
     this.visibleObject = "todos"
     this.loadData("todos")
+
+
+    // LISTEN FOR CHANGES ON THE AUTH Store
+
+    let s = this.store.select('auth').subscribe(
+      (data: any) => {
+        console.log("auth store changed - ", data)
+        if (!data.user) {
+          s.unsubscribe();
+          this.nav.setRoot(LoginPage, {});
+        }
+      },
+      error => {
+        console.log(error)
+      }
+    )
   }
 
   /**
@@ -210,14 +227,8 @@ export class ListStuffPage {
    * @memberOf ListStuffPage
    */
   doLogout() {
-
-    let s = this.auth.logout().subscribe(
-      (data) => {
-        console.log('logging out', data)
-        this.nav.setRoot(LoginPage, {});
-      },
-      (err) => console.log("Error Logging Out:", JSON.parse(err._body).description),
-      () => { s.unsubscribe() }
-    );
+    this.store.dispatch({
+      type: AuthActions.LOGOUT,
+    });
   }
 }

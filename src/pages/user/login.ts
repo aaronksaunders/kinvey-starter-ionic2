@@ -2,8 +2,9 @@ import { NavController } from 'ionic-angular';
 import { Component } from '@angular/core';
 import { CreateAccountPage } from '../createAccount/createAccount';
 import { ListStuffPage } from '../listStuff/listStuff';
-import { Authentication } from '../../providers/authentication';
 
+import { Store } from '@ngrx/store';
+import { AuthenticationReducer, AuthActions} from '../../reducers/authentication';
 /**
  * 
  * 
@@ -18,14 +19,10 @@ export class LoginPage {
 
   /**
    * 
-   * 
-   * 
    * @memberOf LoginPage
    */
   username
   /**
-   * 
-   * 
    * 
    * @memberOf LoginPage
    */
@@ -39,11 +36,27 @@ export class LoginPage {
    * 
    * @memberOf LoginPage
    */
-  constructor(public nav: NavController, public auth: Authentication) {
+  constructor(public nav: NavController,
+    private store: Store<any>) {
     //This will hold data from our form
     this.username = null;
     this.password = null;
 
+
+    let s = this.store.select('auth').subscribe(
+      (data: any) => {
+        console.log("auth store changed - ", data)
+        if (data.user) {
+          s.unsubscribe();
+          this.nav.setRoot(ListStuffPage, {});
+        }
+      },
+      error => {
+        console.log(error)
+      }
+    )
+
+    //
     this.checkAuth()
   }
 
@@ -54,9 +67,7 @@ export class LoginPage {
    * @memberOf LoginPage
    */
   checkAuth() {
-    if (localStorage.getItem('token')) {
-      this.nav.setRoot(ListStuffPage, {});
-    }
+    this.store.dispatch({ type: AuthActions.CHECK_AUTH });
   }
 
   /**
@@ -71,15 +82,17 @@ export class LoginPage {
 
     console.log("username: " + this.username + " password " + this.password)
 
-    this.auth.login(this.username, this.password)
-      .subscribe(
-      (data: any) => {
-        console.log('Login Success', data)
-        this.nav.setRoot(ListStuffPage, {});
-      },
-      (err) => console.log("Error Loging In:", JSON.parse(err._body).description),
-      () => { console.log("error") }
-      );
+
+    this.store.dispatch({
+      type: AuthActions.LOGIN,
+      payload: {
+        username: this.username, password: this.password
+      }
+    });
+
+    //    console.log('Login Success', data)
+    //    this.nav.setRoot(ListStuffPage, {});
+
   }
 
   /**
