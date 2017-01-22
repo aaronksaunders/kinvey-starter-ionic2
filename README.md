@@ -1,5 +1,7 @@
 # kinvey-starter-ionic2-RC - Updated to work with latest release candidate
 
+### This project is being migrated to manage state using ngrx/store & ngrx/effects
+
 #### Tested With Ionic Version 
 ```
 Cordova CLI: 6.3.0
