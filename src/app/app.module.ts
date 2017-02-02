@@ -1,3 +1,5 @@
+import { ToDoService } from './../providers/todoService';
+import { TodoReducer, TodoEffects } from './../reducers/todo';
 import { AuthEffects } from './../reducers/authentication.effects';
 import { NgModule, ErrorHandler } from '@angular/core';
 import { IonicApp, IonicModule, IonicErrorHandler } from 'ionic-angular';
@@ -19,6 +21,10 @@ import { EffectsModule } from '@ngrx/effects';
 import { StoreDevtoolsModule } from '@ngrx/store-devtools';
 
 
+const appEffectsRun = [
+  EffectsModule.run(AuthEffects),
+  EffectsModule.run(TodoEffects),
+];
 
 @NgModule({
   declarations: [
@@ -31,8 +37,8 @@ import { StoreDevtoolsModule } from '@ngrx/store-devtools';
   ],
   imports: [
     IonicModule.forRoot(MyApp),
-    StoreModule.provideStore({ auth: AuthenticationReducer }),
-    EffectsModule.run(AuthEffects),
+    StoreModule.provideStore({ auth: AuthenticationReducer, todos: TodoReducer }),
+    ...appEffectsRun,
     StoreDevtoolsModule.instrumentOnlyWithExtension()
   ],
   bootstrap: [IonicApp],
@@ -43,6 +49,6 @@ import { StoreDevtoolsModule } from '@ngrx/store-devtools';
     AddStuffModal,
     CreateAccountPage
   ],
-  providers: [Authentication, { provide: ErrorHandler, useClass: IonicErrorHandler }]
+  providers: [Authentication, ToDoService,{ provide: ErrorHandler, useClass: IonicErrorHandler }]
 })
 export class AppModule { }

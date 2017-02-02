@@ -1,3 +1,4 @@
+import { TodoActions } from './../../reducers/todo';
 import { Component, NgZone } from '@angular/core';
 import { NavController, ModalController, AlertController } from 'ionic-angular';
 import { ToDoService } from '../../providers/todoService';
@@ -75,7 +76,6 @@ export class ListStuffPage {
 
 
     // LISTEN FOR CHANGES ON THE AUTH Store
-
     let s = this.store.select('auth').subscribe(
       (data: any) => {
         console.log("auth store changed - ", data)
@@ -154,6 +154,18 @@ export class ListStuffPage {
    */
   loadData(_visibleObject) {
     if (_visibleObject === "todos") {
+
+      this.itemList = this.store.select('todos')
+
+      this.store.select('todos').subscribe(
+        (_resp:any) => { _resp.error && console.log(_resp) }
+      )
+
+      this.store.dispatch({
+        type: TodoActions.FETCH_TODOS,
+      });
+
+      /*
       this.tdService.getAllItems().subscribe(
         (data) => {
           console.log('getAllItems', data)
@@ -161,6 +173,7 @@ export class ListStuffPage {
         },
         (err) => console.log("Error Retrieving Data:", JSON.parse(err._body).description),
       );
+      */
     }
 
     if (_visibleObject === "images") {

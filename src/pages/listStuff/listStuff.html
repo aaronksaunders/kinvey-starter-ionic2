@@ -36,7 +36,7 @@
 
   <div [ngSwitch]="visibleObject">
     <ion-list *ngSwitchCase="'todos'">
-      <ion-item-sliding #slideItem *ngFor="let item of itemList ; let i = index; trackBy: trackItem" no-padding>
+      <ion-item-sliding #slideItem *ngFor="let item of (itemList | async)?.data ; let i = index; trackBy: trackItem" no-padding>
         <ion-item no-padding>
           <ion-card no-padding>
             <ion-card-header>

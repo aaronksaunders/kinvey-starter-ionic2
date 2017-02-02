@@ -24,7 +24,6 @@ export const AuthActions = {
 
 
 export const AuthenticationReducer: any = (state = {}, action: Action) => {
-    console.log(state, action)
     switch (action.type) {
 
         case AuthActions.INIT_KINVEY: {
